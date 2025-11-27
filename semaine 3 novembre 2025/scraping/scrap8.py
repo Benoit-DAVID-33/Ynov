@@ -5,7 +5,7 @@ params = {
     "apps_category": "EDUCATION",  # ou autre catégorie
     "gl": "fr",
     "hl": "fr",
-    "api_key": "056d2e6d099560602276ee97be16968366f4bc0f272c76582480e57c2daf6290"
+    "api_key": ""
 }
 
 search = GoogleSearch(params)
