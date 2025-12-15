@@ -1,0 +1,43 @@
+RAPPORT EMPLOI DU TEMPS - SCORE : 1180
+==================================================
+
+
+--- Lundi ---
+  Créneau 1 : Cours 10 | Prof 01 | Salle 01 (40/50) | ✅ ❤️ [PREF PROF]
+  Créneau 1 : Cours 14 | Prof 00 | Salle 06 (56/100) | ✅
+  Créneau 2 : Cours 24 | Prof 19 | Salle 08 (70/100) | ✅ ❤️ [PREF PROF]
+  Créneau 3 : Cours 04 | Prof 14 | Salle 06 (85/100) | ✅ ❤️ [PREF PROF]
+  Créneau 3 : Cours 05 | Prof 01 | Salle 08 (47/100) | ✅ ❤️ [PREF PROF]
+
+--- Mardi ---
+  Créneau 1 : Cours 09 | Prof 14 | Salle 03 (50/50) | ✅
+  Créneau 1 : Cours 25 | Prof 09 | Salle 09 (76/100) | ✅ ❤️ [PREF PROF]
+  Créneau 2 : Cours 20 | Prof 09 | Salle 06 (80/100) | ✅ ❤️ [PREF PROF]
+  Créneau 2 : Cours 27 | Prof 17 | Salle 11 (67/100) | ✅
+  Créneau 3 : Cours 18 | Prof 09 | Salle 08 (76/100) | ✅ ❤️ [PREF PROF]
+
+--- Mercredi ---
+  Créneau 1 : Cours 12 | Prof 08 | Salle 11 (56/100) | ✅ ❤️ [PREF PROF]
+  Créneau 1 : Cours 28 | Prof 10 | Salle 09 (55/100) | ✅
+  Créneau 2 : Cours 17 | Prof 08 | Salle 01 (47/50) | ✅ ❤️ [PREF PROF]
+  Créneau 3 : Cours 00 | Prof 00 | Salle 11 (75/100) | ✅
+  Créneau 3 : Cours 19 | Prof 05 | Salle 08 (75/100) | ✅
+
+--- Jeudi ---
+  Créneau 1 : Cours 23 | Prof 13 | Salle 11 (78/100) | ✅ ❤️ [PREF PROF]
+  Créneau 1 : Cours 29 | Prof 05 | Salle 08 (69/100) | ✅ ❤️ [PREF PROF]
+  Créneau 2 : Cours 03 | Prof 06 | Salle 11 (65/100) | ✅
+  Créneau 2 : Cours 13 | Prof 09 | Salle 08 (70/100) | ✅
+  Créneau 2 : Cours 21 | Prof 11 | Salle 01 (21/50) | ✅
+  Créneau 2 : Cours 26 | Prof 05 | Salle 09 (66/100) | ✅ ❤️ [PREF PROF]
+  Créneau 3 : Cours 01 | Prof 18 | Salle 11 (43/100) | ✅ ❤️ [PREF PROF]
+  Créneau 3 : Cours 08 | Prof 14 | Salle 06 (54/100) | ✅
+
+--- Vendredi ---
+  Créneau 1 : Cours 07 | Prof 03 | Salle 08 (25/100) | ✅ ❤️ [PREF PROF]
+  Créneau 1 : Cours 15 | Prof 12 | Salle 11 (88/100) | ✅ ❤️ [PREF PROF]
+  Créneau 1 : Cours 22 | Prof 17 | Salle 06 (26/100) | ✅
+  Créneau 2 : Cours 02 | Prof 04 | Salle 09 (35/100) | ✅ ❤️ [PREF PROF]
+  Créneau 3 : Cours 06 | Prof 02 | Salle 11 (72/100) | ✅ ❤️ [PREF PROF]
+  Créneau 3 : Cours 11 | Prof 03 | Salle 06 (74/100) | ✅ ❤️ [PREF PROF]
+  Créneau 3 : Cours 16 | Prof 11 | Salle 09 (53/100) | ✅
