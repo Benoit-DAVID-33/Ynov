@@ -1,0 +1,11 @@
+# Jeu de survie Humains vs Zombies avec Algorithme Génétique
+# Requirements pour Python 3.6+
+
+# Interface graphique
+pygame
+
+# Calculs scientifiques et algorithmes
+numpy
+
+# Pour le profilage et l'optimisation (optionnel)
+matplotlib  # Pour visualiser l'évolution (optionnel)
