@@ -1,0 +1,52 @@
+
+=== VISUAL EFFECTS REQUEST FOR VIDEO ===
+
+MEDIA SPECIFICATIONS:
+- Type: Video
+- Resolution: 3840×2160
+- Aspect Ratio: 1.78:1
+
+PRIMARY OBJECTIVE:
+Un chat descend un pont de bois
+
+====================================
+SPATIAL LAYOUT & ELEMENTS TO ENHANCE
+====================================
+
+LINES & PATHS (1):
+1. CURVED:
+   - From: (5.2%, 2.9%) To: (22.9%, 9.4%)
+   - Style: curved
+   - Motion Tracking: Disabled
+
+====================================
+ELEMENT SUMMARY
+====================================
+- Total Elements: 1
+- 3D Objects: 0
+- 2D Shapes: 0
+- Text Elements: 0
+- Lines/Paths: 1
+- Elements with Motion Tracking: 0
+
+====================================
+INSTRUCTIONS FOR GENERATIVE AI
+====================================
+1. Respect all spatial coordinates provided (position, size, rotation)
+2. Apply effects in the specified zones/areas
+3. For motion-tracked elements: ensure the effect follows the element/scene movement
+4. For static elements: keep the effect in the exact position specified
+5. Scale effects appropriately based on element sizes
+6. Maintain visual harmony across all elements
+7. Execute the primary objective: Un chat descend un pont de bois
+
+====================================
+EXPECTED RESULT
+====================================
+A video with:
+- All specified effects applied at exact coordinates
+- Seamless integration of visual enhancements
+- Professional-quality output matching input resolution (3840×2160)
+- Consistency with the user's creative vision
+
+Start generation now.
