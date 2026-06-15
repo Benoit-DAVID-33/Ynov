@@ -1,0 +1,8 @@
+ID,Use Case,Question Métier,Métriques Clés,Dimension,Visualisation,Décision
+UC-1,Carte Choroplèthe Prix/Revenu,Quels quartiers offrent le meilleur ROI par segment?,"['Médiane Prix', 'Revenu Estimé 365j', 'Occupancy Rate']",Quartier,Choroplèthe (Folium),"Allocation propriétés premium, stratégie pricing géo"
+UC-2,Heatmap Densité Spatiale,Où se concentrent les annonces par typologie?,"['Densité', 'Room Type', 'Property Type']",Localisation (Long/Lat),Heatmap + Folium Clusters,"Identification zones de saturation, opportunités géographiques"
+UC-3,Segmentation Marché,Existe-t-il des segments rentables distincts?,"['Prix', 'Occupancy', 'Revenu', 'Room/Property Type']",Type logement × Type chambre,Violin/Box Plot + Treemap,"Création offre ciblée, mix produit optimal"
+UC-4,Superhost vs Non-Superhost,Le statut Superhost crée-t-il un avantage compétitif?,"['Review Scores', 'Occupancy', 'Revenu', 'Availability']",Statut Host,Distribution + Boxplot + Tests Stats,"Critères de progression, impact qualité sur revenu"
+UC-5,Trade-off Prix/Disponibilité,Quel est l'équilibre optimal Prix ↔ Occupancy?,"['Prix', 'Availability', 'Estimated Occupancy', '$ Revenue']",Relation bivariée,Hexbin Scatter + Regression,"Modèle pricing dynamique, optimisation revenu"
+UC-6,Avis & Satisfaction,Quelle est l'impact des avis sur le revenu et le prix?,"['Review Scores', 'Nb Reviews', 'Reviews/mois', 'Prix', 'Revenu']",Qualité perçue,Scatter Regression + Segment Bars,"Corrélation qualité-rentabilité, risque churn"
+UC-7,Amenities & Création Valeur,Quels équipements justifient une prime de prix?,"['Amenities (n=50+)', 'Prix Médian', 'Revenu', 'Avis']",Ensemble d'équipements,Heatmap Amenities + Barplot Premium,"Investissements recommandés, stratégie upgrading"

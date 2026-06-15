@@ -1,0 +1,38 @@
+room_type,property_type,avg_price,count,avg_revenue,avg_occupancy,avg_review
+Entire home/apt,Entire cottage,179.86,7,13953.43,114.43,4.73
+Entire home/apt,Boat,150.53,15,13509.4,107.2,4.84
+Entire home/apt,Entire loft,151.37,49,11283.92,77.92,4.82
+Entire home/apt,Entire serviced apartment,156.21,34,9264.38,68.65,4.68
+Entire home/apt,Entire townhouse,174.52,405,8801.4,62.19,4.84
+Entire home/apt,Entire villa,317.22,149,8335.89,28.56,4.87
+Entire home/apt,Entire rental unit,125.03,3373,7835.56,79.49,4.76
+Entire home/apt,Entire guest suite,67.65,54,7225.0,119.28,4.85
+Entire home/apt,Entire vacation home,88.0,13,7152.62,71.85,4.83
+Entire home/apt,Houseboat,299.2,5,6667.2,33.6,4.89
+Entire home/apt,Entire cabin,69.67,9,6653.33,114.0,4.91
+Entire home/apt,Tiny home,63.77,22,6649.82,112.14,4.87
+Entire home/apt,Entire home,190.37,1378,6645.9,47.18,4.82
+Entire home/apt,Entire chalet,51.0,8,6046.12,115.5,4.8
+Entire home/apt,Entire condo,89.6,343,5806.04,68.57,4.76
+Shared room,Shared room in hostel,84.67,6,5651.5,92.5,4.68
+Private room,Private room in guest suite,54.18,33,5113.21,96.18,4.86
+Entire home/apt,Entire guesthouse,62.52,110,4961.69,84.7,4.85
+Entire home/apt,Entire place,63.78,9,4554.67,77.67,4.69
+Entire home/apt,Entire bungalow,52.88,8,4446.75,110.5,4.79
+Private room,Private room in guesthouse,69.85,34,3953.56,70.53,4.88
+Private room,Private room in hostel,173.29,7,3935.14,28.29,4.63
+Private room,Private room in townhouse,50.28,215,3417.62,72.48,4.86
+Private room,Private room in rental unit,98.98,486,3073.83,59.52,4.76
+Private room,Private room in casa particular,52.15,13,2986.85,66.69,4.84
+Hotel room,Room in boutique hotel,210.43,7,2778.0,28.29,4.78
+Private room,Private room in loft,105.5,6,2420.0,50.0,4.76
+Private room,Room in boutique hotel,141.62,8,2105.25,15.75,4.4
+Private room,Private room in villa,59.16,19,2093.79,44.42,4.89
+Private room,Private room in bed and breakfast,71.99,282,2055.55,37.91,4.71
+Private room,Private room in home,52.6,452,1861.88,45.13,4.85
+Private room,Private room in condo,51.4,118,1808.17,44.53,4.85
+Private room,Room in hotel,154.27,22,1568.18,15.82,4.68
+Shared room,Shared room in rental unit,34.5,12,1531.5,46.5,4.66
+Shared room,Shared room in bed and breakfast,24.21,14,1130.14,45.86,4.04
+Entire home/apt,Camper/RV,73.0,6,27.0,1.0,5.0
+Shared room,Shared room in home,31.86,7,0.0,0.0,4.9
