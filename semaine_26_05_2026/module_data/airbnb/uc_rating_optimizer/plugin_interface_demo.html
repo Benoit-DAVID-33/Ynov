@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rating Optimizer Plugin - Airbnb Host</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #F8F9FA 0%, #EEF1F7 100%);
+            color: #1A1A2E;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Container */
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        /* Header */
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1A1A2E;
+        }
+        .header-info {
+            display: flex;
+            gap: 40px;
+            font-size: 13px;
+            color: #9AA1B5;
+        }
+        .badge {
+            padding: 6px 12px;
+            background: #E8F4FF;
+            border-left: 3px solid #4F8EF8;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4F8EF8;
+        }
+
+        /* Main Layout */
+        .layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 24px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        .property-card {
+            padding: 16px;
+            background: #F8F9FA;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .property-card h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1A1A2E;
+            margin-bottom: 8px;
+        }
+        .property-card p {
+            font-size: 12px;
+            color: #9AA1B5;
+            line-height: 1.5;
+        }
+        .rating-big {
+            font-size: 32px;
+            font-weight: 700;
+            color: #F46A6A;
+            margin: 12px 0;
+        }
+        .segment-label {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #FFE8E8;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #F46A6A;
+        }
+
+        /* Main Content */
+        .main-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        /* Plugin Panel */
+        .plugin-panel {
+            background: linear-gradient(135deg, #F0F6FF 0%, #E8F0FF 100%);
+            border: 2px solid #4F8EF8;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+        .plugin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .plugin-header h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            color: #1A1A2E;
+        }
+        .plugin-icon {
+            font-size: 24px;
+        }
+        .plugin-badge {
+            background: #4F8EF8;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Report Section */
+        .report-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #E8ECFF;
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stat-value {
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #9AA1B5;
+            margin-bottom: 6px;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1A1A2E;
+        }
+        .stat-icon {
+            font-size: 32px;
+            opacity: 0.8;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: #4F8EF8;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #3870D8;
+            box-shadow: 0 4px 12px rgba(79, 142, 248, 0.3);
+        }
+        .btn-secondary {
+            background: white;
+            color: #4F8EF8;
+            border: 2px solid #4F8EF8;
+        }
+        .btn-secondary:hover {
+            background: #F0F6FF;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #E8ECFF;
+        }
+        .tab {
+            padding: 12px 16px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #9AA1B5;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .tab.active {
+            color: #4F8EF8;
+            border-bottom-color: #4F8EF8;
+        }
+
+        /* Preview */
+        .preview-container {
+            background: #F8F9FA;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .preview-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #9AA1B5;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Mini Report Preview */
+        .mini-report {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        .mini-chart {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #E8ECFF;
+        }
+        .mini-chart-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #9AA1B5;
+            margin-bottom: 8px;
+        }
+        .mini-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-start;
+        }
+        .bar-item {
+            width: 100%;
+            font-size: 10px;
+            color: #1A1A2E;
+        }
+        .bar {
+            display: inline-block;
+            height: 6px;
+            border-radius: 2px;
+            margin-right: 6px;
+        }
+        .bar-blue { background: #4F8EF8; }
+        .bar-red { background: #F46A6A; }
+        .bar-green { background: #34D399; }
+
+        /* Insights */
+        .insights {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .insight-card {
+            background: white;
+            border-left: 4px solid #4F8EF8;
+            border-radius: 6px;
+            padding: 12px;
+        }
+        .insight-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #1A1A2E;
+            margin-bottom: 4px;
+        }
+        .insight-text {
+            font-size: 11px;
+            color: #9AA1B5;
+            line-height: 1.4;
+        }
+        .insight-card.warning { border-left-color: #F46A6A; }
+        .insight-card.success { border-left-color: #34D399; }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 32px;
+            background: #F8F9FA;
+            border-radius: 8px;
+            color: #9AA1B5;
+            font-size: 14px;
+        }
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #E8ECFF;
+            border-top: 2px solid #4F8EF8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        .footer-info {
+            background: #E8F4FF;
+            border-left: 3px solid #4F8EF8;
+            border-radius: 6px;
+            padding: 12px 16px;
+            font-size: 12px;
+            color: #4F8EF8;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <h1>Dashboard Hôte</h1>
+            </div>
+            <div class="header-info">
+                <div>
+                    <strong>Bordeaux</strong>
+                    <div>Bassin d'Arcachon</div>
+                </div>
+                <div>
+                    <strong>12 logements</strong>
+                    <div>Tous actifs</div>
+                </div>
+                <span class="badge">NOUVELLE FONCTIONNALITÉ</span>
+            </div>
+        </div>
+
+        <!-- Main Layout -->
+        <div class="layout">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <h3 style="font-size: 14px; margin-bottom: 16px; color: #9AA1B5; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Propriétés</h3>
+                
+                <div class="property-card">
+                    <h3>🏠 Charme Vieux Bordeaux</h3>
+                    <p><strong>2 chambres • 1 salle de bain</strong></p>
+                    <div class="rating-big">4.62</div>
+                    <span class="segment-label">BON</span>
+                    <p style="margin-top: 8px; font-size: 11px;">38 avis • Quartier Saint-Pierre</p>
+                </div>
+
+                <div class="property-card" style="opacity: 0.6;">
+                    <h3>🏠 Loft Moderne</h3>
+                    <p>1 chambre • Studio</p>
+                    <div style="font-size: 20px; color: #9AA1B5; margin: 8px 0;">4.88</div>
+                    <span class="segment-label" style="background: #E8F7F3; color: #34D399;">EXCELLENT</span>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Plugin Panel -->
+                <div class="plugin-panel">
+                    <div class="plugin-header">
+                        <h2>
+                            <span class="plugin-icon">🎯</span>
+                            UC Rating Optimizer
+                        </h2>
+                        <span class="plugin-badge">PLUGIN INTÉGRÉ</span>
+                    </div>
+                    <p style="color: #9AA1B5; font-size: 13px; margin-bottom: 20px;">
+                        Analyse complète de votre bien + recommandations data-driven pour passer de 4.6 à 5 étoiles
+                    </p>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="generateReport()">
+                            📊 Générer le rapport complet
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewPDF()">
+                            📥 Télécharger (PDF)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab(event, 'overview')">Vue d'ensemble</button>
+                    <button class="tab" onclick="switchTab(event, 'recommendations')">Recommandations</button>
+                    <button class="tab" onclick="switchTab(event, 'history')">Historique</button>
+                </div>
+
+                <!-- Tab Content: Overview -->
+                <div id="overview" class="tab-content">
+                    <!-- Stats -->
+                    <div class="report-section">
+                        <div class="stat-card">
+                            <div class="stat-value">
+                                <span class="stat-label">Note actuelle</span>
+                                <span class="stat-number" style="color: #F46A6A;">4.62 ⭐</span>
+                            </div>
+                            <div class="stat-icon">📊</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">
+                                <span class="stat-label">Avis analysés (NLP)</span>
+                                <span class="stat-number">38</span>
+                            </div>
+                            <div class="stat-icon">💬</div>
+                        </div>
+                    </div>
+
+                    <div class="report-section">
+                        <div class="stat-card">
+                            <div class="stat-value">
+                                <span class="stat-label">Équipements déclarés</span>
+                                <span class="stat-number">24</span>
+                            </div>
+                            <div class="stat-icon">🏠</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">
+                                <span class="stat-label">Cible atteindre</span>
+                                <span class="stat-number">5.00 ⭐</span>
+                            </div>
+                            <div class="stat-icon">🎯</div>
+                        </div>
+                    </div>
+
+                    <!-- Preview Label -->
+                    <div class="preview-label">Aperçu du rapport</div>
+
+                    <!-- Mini Report Preview -->
+                    <div class="mini-report">
+                        <div class="mini-chart">
+                            <div class="mini-chart-title">🔧 Équipements à ajouter</div>
+                            <div class="mini-bars">
+                                <div class="bar-item"><span class="bar bar-blue" style="width: 70%;"></span>WiFi rapide</div>
+                                <div class="bar-item"><span class="bar bar-blue" style="width: 60%;"></span>Climatisation</div>
+                                <div class="bar-item"><span class="bar bar-blue" style="width: 45%;"></span>Parking</div>
+                            </div>
+                        </div>
+                        <div class="mini-chart">
+                            <div class="mini-chart-title">💬 Plaintes voyageurs</div>
+                            <div class="mini-bars">
+                                <div class="bar-item"><span class="bar bar-red" style="width: 40%;"></span>Bruit/nuisances</div>
+                                <div class="bar-item"><span class="bar bar-red" style="width: 30%;"></span>Propreté</div>
+                                <div class="bar-item"><span class="bar bar-red" style="width: 20%;"></span>Check-in</div>
+                            </div>
+                        </div>
+                        <div class="mini-chart">
+                            <div class="mini-chart-title">📊 Sous-scores vs Excellent</div>
+                            <div class="mini-bars">
+                                <div class="bar-item"><span class="bar bar-green" style="width: 90%;"></span>Propreté</div>
+                                <div class="bar-item"><span class="bar bar-red" style="width: 60%;"></span>Précision</div>
+                                <div class="bar-item"><span class="bar bar-red" style="width: 75%;"></span>Localisation</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Insights -->
+                    <div style="margin-top: 24px;">
+                        <div class="preview-label">Insights clés</div>
+                        <div class="insights">
+                            <div class="insight-card warning">
+                                <div class="insight-title">🔧 Action prioritaire #1</div>
+                                <div class="insight-text"><strong>WiFi rapide visible dès l'annonce</strong> — 75% des Excellent 4.8+ en ont un. Coût estimé : 50€/mois</div>
+                            </div>
+                            <div class="insight-card warning">
+                                <div class="insight-title">🗣️ Action prioritaire #2</div>
+                                <div class="insight-text"><strong>Réduire bruit/nuisances</strong> — Mentionné dans 12% des avis (plainte #1). Vérifier isolation acoustique.</div>
+                            </div>
+                            <div class="insight-card success">
+                                <div class="insight-title">✅ Point fort</div>
+                                <div class="insight-text"><strong>Propreté</strong> — Score 4.8/5 vs 4.9 chez les excellents. Maintenir le niveau !</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="footer-info">
+                        ℹ️ Le rapport complet (PDF) contient 6 diapos : cover + 1 slide par logement sélectionné + fin
+                    </div>
+                </div>
+
+                <!-- Tab Content: Recommendations (hidden by default) -->
+                <div id="recommendations" class="tab-content" style="display: none;">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Cliquez sur "Générer le rapport complet" pour voir les recommandations détaillées
+                    </div>
+                </div>
+
+                <!-- Tab Content: History (hidden by default) -->
+                <div id="history" class="tab-content" style="display: none;">
+                    <div style="text-align: center; padding: 40px; color: #9AA1B5;">
+                        <p style="margin-bottom: 16px;">Pas de rapport généré encore.</p>
+                        <p style="font-size: 12px;">Générez votre premier rapport ci-dessus →</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        function generateReport() {
+            alert('📊 PPTX généré : Report_Logements_Reels_20260625_143052.pptx\n\n✅ 1 logement(s) • 8 diapos • 324 Ko\n\nLe fichier est prêt à télécharger !');
+        }
+        
+        function viewPDF() {
+            alert('📥 Téléchargement du rapport PDF...\n\nRecommandations complètes avec graphiques intégrés');
+        }
+
+        function switchTab(event, tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.style.display = 'none');
+            
+            // Show active tab
+            document.getElementById(tabName).style.display = 'block';
+            
+            // Update active tab button
+            const buttons = document.querySelectorAll('.tab');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
