@@ -1,0 +1,11 @@
+name: npc_brain
+version: "1.0.0"
+config-version: 2
+
+profile: npc_brain
+
+model-paths: ["models"]
+
+models:
+  npc_brain:
+    +materialized: table

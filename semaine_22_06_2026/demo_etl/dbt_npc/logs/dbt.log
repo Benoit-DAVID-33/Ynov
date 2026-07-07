@@ -1,0 +1,987 @@
+[0m14:02:44.884045 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002339558FF10>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000023394338910>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000023394338590>]}
+
+
+============================== 14:02:44.887232 | e38a77fe-5a62-4d7d-81be-53be265ee72f ==============================
+[0m14:02:44.887232 [info ] [MainThread]: Running with dbt=1.11.12
+[0m14:02:44.889241 [debug] [MainThread]: running dbt with arguments {'version_check': 'True', 'no_print': 'None', 'static_parser': 'True', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'target_path': 'None', 'printer_width': '80', 'write_json': 'True', 'empty': 'False', 'log_cache_events': 'False', 'introspect': 'True', 'cache_selected_only': 'False', 'fail_fast': 'False', 'debug': 'False', 'log_format': 'default', 'partial_parse': 'True', 'send_anonymous_usage_stats': 'True', 'quiet': 'False', 'warn_error': 'None', 'profiles_dir': 'dbt_npc', 'use_colors': 'True', 'invocation_command': 'dbt run --project-dir dbt_npc --profiles-dir dbt_npc', 'indirect_selection': 'eager', 'use_experimental_parser': 'False', 'log_path': 'dbt_npc\\logs'}
+[0m14:02:45.159046 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': 'e38a77fe-5a62-4d7d-81be-53be265ee72f', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000233956B2990>]}
+[0m14:02:45.197316 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': 'e38a77fe-5a62-4d7d-81be-53be265ee72f', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000023390EAFC90>]}
+[0m14:02:45.200317 [info ] [MainThread]: Registered adapter: duckdb=1.10.1
+[0m14:02:45.422317 [debug] [MainThread]: checksum: f368f5348cf42803b94ef7fb8257ecf3bf9a9a16dd9c8c51fe5172f2dbeb457f, vars: {}, profile: , target: , version: 1.11.12
+[0m14:02:45.423316 [info ] [MainThread]: Unable to do partial parsing because saved manifest not found. Starting full parse.
+[0m14:02:45.423316 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'partial_parser', 'label': 'e38a77fe-5a62-4d7d-81be-53be265ee72f', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000233956B35D0>]}
+[0m14:02:46.128773 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': 'e38a77fe-5a62-4d7d-81be-53be265ee72f', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000023395B941D0>]}
+[0m14:02:46.167190 [debug] [MainThread]: Wrote artifact WritableManifest to dbt_npc\target\manifest.json
+[0m14:02:46.174199 [debug] [MainThread]: Wrote artifact SemanticManifest to dbt_npc\target\semantic_manifest.json
+[0m14:02:46.183698 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'resource_counts', 'label': 'e38a77fe-5a62-4d7d-81be-53be265ee72f', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000023395CD6ED0>]}
+[0m14:02:46.185202 [info ] [MainThread]: Found 2 models, 485 macros
+[0m14:02:46.185202 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'runnable_timing', 'label': 'e38a77fe-5a62-4d7d-81be-53be265ee72f', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000233911A2F90>]}
+[0m14:02:46.186207 [info ] [MainThread]: 
+[0m14:02:46.187210 [info ] [MainThread]: Concurrency: 1 threads (target='dev')
+[0m14:02:46.187210 [info ] [MainThread]: 
+[0m14:02:46.188212 [debug] [MainThread]: Acquiring new duckdb connection 'master'
+[0m14:02:46.191211 [debug] [ThreadPool]: Acquiring new duckdb connection 'list_npc_brain'
+[0m14:02:46.332225 [debug] [ThreadPool]: Using duckdb connection "list_npc_brain"
+[0m14:02:46.333227 [debug] [ThreadPool]: On list_npc_brain: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "connection_name": "list_npc_brain"} */
+
+    
+    select schema_name
+    from system.information_schema.schemata
+    
+    where lower(catalog_name) = '"npc_brain"'
+    
+  
+  
+[0m14:02:46.333227 [debug] [ThreadPool]: Opening a new connection, currently in state init
+[0m14:02:46.363348 [debug] [ThreadPool]: SQL status: OK in 0.030 seconds
+[0m14:02:46.364853 [debug] [ThreadPool]: On list_npc_brain: Close
+[0m14:02:46.365858 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly list_npc_brain, now create_npc_brain_main)
+[0m14:02:46.365858 [debug] [ThreadPool]: Creating schema "database: "npc_brain"
+schema: "main"
+"
+[0m14:02:46.369858 [debug] [ThreadPool]: Using duckdb connection "create_npc_brain_main"
+[0m14:02:46.370858 [debug] [ThreadPool]: On create_npc_brain_main: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "connection_name": "create_npc_brain_main"} */
+
+    
+        select type from duckdb_databases()
+        where lower(database_name)='npc_brain'
+        and type='sqlite'
+    
+  
+[0m14:02:46.370858 [debug] [ThreadPool]: Opening a new connection, currently in state closed
+[0m14:02:46.371860 [debug] [ThreadPool]: SQL status: OK in 0.001 seconds
+[0m14:02:46.372859 [debug] [ThreadPool]: Using duckdb connection "create_npc_brain_main"
+[0m14:02:46.373857 [debug] [ThreadPool]: On create_npc_brain_main: BEGIN
+[0m14:02:46.373857 [debug] [ThreadPool]: SQL status: OK in 0.000 seconds
+[0m14:02:46.373857 [debug] [ThreadPool]: Using duckdb connection "create_npc_brain_main"
+[0m14:02:46.374866 [debug] [ThreadPool]: On create_npc_brain_main: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "connection_name": "create_npc_brain_main"} */
+
+    
+    
+        create schema if not exists "npc_brain"."main"
+    
+[0m14:02:46.375378 [debug] [ThreadPool]: SQL status: OK in 0.000 seconds
+[0m14:02:46.375378 [debug] [ThreadPool]: On create_npc_brain_main: COMMIT
+[0m14:02:46.376385 [debug] [ThreadPool]: Using duckdb connection "create_npc_brain_main"
+[0m14:02:46.376385 [debug] [ThreadPool]: On create_npc_brain_main: COMMIT
+[0m14:02:46.377386 [debug] [ThreadPool]: SQL status: OK in 0.000 seconds
+[0m14:02:46.377386 [debug] [ThreadPool]: On create_npc_brain_main: Close
+[0m14:02:46.378378 [debug] [ThreadPool]: Acquiring new duckdb connection 'list_npc_brain_main'
+[0m14:02:46.382388 [debug] [ThreadPool]: Using duckdb connection "list_npc_brain_main"
+[0m14:02:46.382388 [debug] [ThreadPool]: On list_npc_brain_main: BEGIN
+[0m14:02:46.383385 [debug] [ThreadPool]: Opening a new connection, currently in state init
+[0m14:02:46.383385 [debug] [ThreadPool]: SQL status: OK in 0.001 seconds
+[0m14:02:46.383385 [debug] [ThreadPool]: Using duckdb connection "list_npc_brain_main"
+[0m14:02:46.383385 [debug] [ThreadPool]: On list_npc_brain_main: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "connection_name": "list_npc_brain_main"} */
+select
+      'npc_brain' as database,
+      table_name as name,
+      table_schema as schema,
+      CASE table_type
+        WHEN 'BASE TABLE' THEN 'table'
+        WHEN 'VIEW' THEN 'view'
+        WHEN 'LOCAL TEMPORARY' THEN 'table'
+        END as type
+    from system.information_schema.tables
+    where lower(table_schema) = 'main'
+    and lower(table_catalog) = 'npc_brain'
+  
+[0m14:02:46.386903 [debug] [ThreadPool]: SQL status: OK in 0.002 seconds
+[0m14:02:46.387908 [debug] [ThreadPool]: On list_npc_brain_main: ROLLBACK
+[0m14:02:46.400934 [debug] [ThreadPool]: Failed to rollback 'list_npc_brain_main'
+[0m14:02:46.400934 [debug] [ThreadPool]: On list_npc_brain_main: Close
+[0m14:02:46.401934 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'runnable_timing', 'label': 'e38a77fe-5a62-4d7d-81be-53be265ee72f', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000023395B3A790>]}
+[0m14:02:46.401934 [debug] [MainThread]: Using duckdb connection "master"
+[0m14:02:46.402934 [debug] [MainThread]: On master: BEGIN
+[0m14:02:46.402934 [debug] [MainThread]: Opening a new connection, currently in state init
+[0m14:02:46.402934 [debug] [MainThread]: SQL status: OK in 0.000 seconds
+[0m14:02:46.403942 [debug] [MainThread]: On master: COMMIT
+[0m14:02:46.403942 [debug] [MainThread]: Using duckdb connection "master"
+[0m14:02:46.403942 [debug] [MainThread]: On master: COMMIT
+[0m14:02:46.404985 [debug] [MainThread]: SQL status: OK in 0.000 seconds
+[0m14:02:46.404985 [debug] [MainThread]: On master: Close
+[0m14:02:46.487342 [debug] [Thread-1 (]: Began running node model.npc_brain.silver
+[0m14:02:46.487342 [info ] [Thread-1 (]: 1 of 2 START sql table model main.silver ....................................... [RUN]
+[0m14:02:46.488343 [debug] [Thread-1 (]: Acquiring new duckdb connection 'model.npc_brain.silver'
+[0m14:02:46.488343 [debug] [Thread-1 (]: Began compiling node model.npc_brain.silver
+[0m14:02:46.493433 [debug] [Thread-1 (]: Writing injected SQL for node "model.npc_brain.silver"
+[0m14:02:46.494937 [debug] [Thread-1 (]: Began executing node model.npc_brain.silver
+[0m14:02:46.513966 [debug] [Thread-1 (]: Writing runtime sql for node "model.npc_brain.silver"
+[0m14:02:46.518611 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:02:46.519976 [debug] [Thread-1 (]: On model.npc_brain.silver: BEGIN
+[0m14:02:46.519976 [debug] [Thread-1 (]: Opening a new connection, currently in state init
+[0m14:02:46.520987 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+[0m14:02:46.520987 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:02:46.520987 [debug] [Thread-1 (]: On model.npc_brain.silver: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.silver"} */
+
+  
+    
+    
+
+    create  table
+      "npc_brain"."main"."silver__dbt_tmp"
+  
+    as (
+      
+
+WITH base AS (
+    SELECT * FROM read_parquet('data/bronze.parquet')
+),
+
+enriched AS (
+    SELECT
+        *,
+        COALESCE(nearest_gold_direction, 'AUCUN') AS nearest_gold_direction_clean,
+        COALESCE(nearest_gold_distance,  0.0)      AS nearest_gold_distance_clean,
+
+        CASE
+            WHEN golds_count = 0 OR decision IS NULL THEN FALSE
+            WHEN decision = 'HAUT'   AND nearest_gold_direction IN ('NORD', 'NORD-EST', 'NORD-OUEST')   THEN TRUE
+            WHEN decision = 'BAS'    AND nearest_gold_direction IN ('SUD',  'SUD-EST',  'SUD-OUEST')    THEN TRUE
+            WHEN decision = 'GAUCHE' AND nearest_gold_direction IN ('OUEST', 'NORD-OUEST', 'SUD-OUEST') THEN TRUE
+            WHEN decision = 'DROITE' AND nearest_gold_direction IN ('EST',   'NORD-EST',   'SUD-EST')   THEN TRUE
+            ELSE FALSE
+        END AS decision_correct,
+
+        SUM(gold_collected::INT) OVER (
+            PARTITION BY simulation_id ORDER BY turn
+        ) AS gold_collected_cumsum,
+
+        ((turn - 1) / 5) * 5 + 1 AS turn_block,
+
+        ABS(player_row - LAG(player_row, 1, player_row) OVER (PARTITION BY simulation_id ORDER BY turn))
+        + ABS(player_col - LAG(player_col, 1, player_col) OVER (PARTITION BY simulation_id ORDER BY turn))
+            AS manhattan_move
+
+    FROM base
+)
+
+SELECT
+    simulation_id, model, turn, player_row, player_col,
+    golds_count, ennemies_count,
+    nearest_gold_direction_clean AS nearest_gold_direction,
+    nearest_gold_distance_clean  AS nearest_gold_distance,
+    blocked_directions,
+    decision, moved, was_blocked, gold_collected,
+    gold_remaining, initial_gold_count,
+    decision_correct, gold_collected_cumsum, turn_block, manhattan_move
+FROM enriched
+    );
+  
+  
+[0m14:02:46.531029 [debug] [Thread-1 (]: SQL status: OK in 0.009 seconds
+[0m14:02:46.535534 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:02:46.535534 [debug] [Thread-1 (]: On model.npc_brain.silver: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.silver"} */
+alter table "npc_brain"."main"."silver__dbt_tmp" rename to "silver"
+[0m14:02:46.536541 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+[0m14:02:46.545441 [debug] [Thread-1 (]: On model.npc_brain.silver: COMMIT
+[0m14:02:46.545441 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:02:46.545441 [debug] [Thread-1 (]: On model.npc_brain.silver: COMMIT
+[0m14:02:46.564115 [debug] [Thread-1 (]: SQL status: OK in 0.018 seconds
+[0m14:02:46.568514 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:02:46.568514 [debug] [Thread-1 (]: On model.npc_brain.silver: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.silver"} */
+
+      drop table if exists "npc_brain"."main"."silver__dbt_backup" cascade
+    
+[0m14:02:46.569516 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+[0m14:02:46.571514 [debug] [Thread-1 (]: On model.npc_brain.silver: Close
+[0m14:02:46.575020 [debug] [Thread-1 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': 'e38a77fe-5a62-4d7d-81be-53be265ee72f', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000233960F7490>]}
+[0m14:02:46.575020 [info ] [Thread-1 (]: 1 of 2 OK created sql table model main.silver .................................. [[32mOK[0m in 0.08s]
+[0m14:02:46.576025 [debug] [Thread-1 (]: Finished running node model.npc_brain.silver
+[0m14:02:46.576025 [debug] [Thread-1 (]: Began running node model.npc_brain.gold
+[0m14:02:46.577026 [info ] [Thread-1 (]: 2 of 2 START sql table model main.gold ......................................... [RUN]
+[0m14:02:46.577026 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.npc_brain.silver, now model.npc_brain.gold)
+[0m14:02:46.578027 [debug] [Thread-1 (]: Began compiling node model.npc_brain.gold
+[0m14:02:46.580025 [debug] [Thread-1 (]: Writing injected SQL for node "model.npc_brain.gold"
+[0m14:02:46.582025 [debug] [Thread-1 (]: Began executing node model.npc_brain.gold
+[0m14:02:46.584025 [debug] [Thread-1 (]: Writing runtime sql for node "model.npc_brain.gold"
+[0m14:02:46.585025 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:02:46.585025 [debug] [Thread-1 (]: On model.npc_brain.gold: BEGIN
+[0m14:02:46.586172 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m14:02:46.586172 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+[0m14:02:46.587170 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:02:46.587170 [debug] [Thread-1 (]: On model.npc_brain.gold: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.gold"} */
+
+  
+    
+    
+
+    create  table
+      "npc_brain"."main"."gold__dbt_tmp"
+  
+    as (
+      
+
+WITH agg AS (
+    SELECT
+        simulation_id,
+        MAX(turn)                            AS total_turns,
+        SUM(gold_collected::INT)             AS gold_collected,
+        MAX(initial_gold_count)              AS initial_gold,
+        SUM(was_blocked::INT)                AS blocked_turns,
+        SUM(decision_correct::INT)           AS correct_decisions,
+        COUNT(*)                             AS total_decisions,
+        ROUND(AVG(nearest_gold_distance), 4) AS avg_nearest_gold_dist
+    FROM "npc_brain"."main"."silver"
+    GROUP BY simulation_id
+),
+
+kpis AS (
+    SELECT *,
+        ROUND(gold_collected  * 1.0 / NULLIF(initial_gold,     0), 4) AS gold_collection_rate,
+        ROUND(correct_decisions * 1.0 / NULLIF(total_decisions, 0), 4) AS decision_accuracy
+    FROM agg
+)
+
+SELECT *,
+    ROUND(
+        gold_collection_rate * 0.6
+        + decision_accuracy  * 0.3
+        + (1.0 - blocked_turns * 1.0 / NULLIF(total_turns, 0)) * 0.1
+    , 3) AS efficiency_score,
+
+    CASE
+        WHEN gold_collection_rate = 1.0  THEN 'Victoire complète'
+        WHEN gold_collection_rate >= 0.5 THEN 'Victoire partielle'
+        WHEN gold_collected > 0          THEN 'Progrès minimal'
+        ELSE 'Échec'
+    END AS simulation_type
+
+FROM kpis
+    );
+  
+  
+[0m14:02:46.596261 [debug] [Thread-1 (]: SQL status: OK in 0.009 seconds
+[0m14:02:46.599261 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:02:46.600262 [debug] [Thread-1 (]: On model.npc_brain.gold: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.gold"} */
+alter table "npc_brain"."main"."gold__dbt_tmp" rename to "gold"
+[0m14:02:46.600262 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+[0m14:02:46.601263 [debug] [Thread-1 (]: On model.npc_brain.gold: COMMIT
+[0m14:02:46.601263 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:02:46.602769 [debug] [Thread-1 (]: On model.npc_brain.gold: COMMIT
+[0m14:02:46.609787 [debug] [Thread-1 (]: SQL status: OK in 0.007 seconds
+[0m14:02:46.610789 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:02:46.611788 [debug] [Thread-1 (]: On model.npc_brain.gold: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.gold"} */
+
+      drop table if exists "npc_brain"."main"."gold__dbt_backup" cascade
+    
+[0m14:02:46.611788 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+[0m14:02:46.612790 [debug] [Thread-1 (]: On model.npc_brain.gold: Close
+[0m14:02:46.613787 [debug] [Thread-1 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': 'e38a77fe-5a62-4d7d-81be-53be265ee72f', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000023395C3C7D0>]}
+[0m14:02:46.613787 [info ] [Thread-1 (]: 2 of 2 OK created sql table model main.gold .................................... [[32mOK[0m in 0.04s]
+[0m14:02:46.614789 [debug] [Thread-1 (]: Finished running node model.npc_brain.gold
+[0m14:02:46.615295 [debug] [MainThread]: Using duckdb connection "master"
+[0m14:02:46.616300 [debug] [MainThread]: On master: BEGIN
+[0m14:02:46.616300 [debug] [MainThread]: Opening a new connection, currently in state closed
+[0m14:02:46.616300 [debug] [MainThread]: SQL status: OK in 0.000 seconds
+[0m14:02:46.617305 [debug] [MainThread]: On master: COMMIT
+[0m14:02:46.617305 [debug] [MainThread]: Using duckdb connection "master"
+[0m14:02:46.618300 [debug] [MainThread]: On master: COMMIT
+[0m14:02:46.618300 [debug] [MainThread]: SQL status: OK in 0.000 seconds
+[0m14:02:46.618300 [debug] [MainThread]: On master: Close
+[0m14:02:46.619299 [debug] [MainThread]: Connection 'master' was properly closed.
+[0m14:02:46.620300 [debug] [MainThread]: Connection 'create_npc_brain_main' was properly closed.
+[0m14:02:46.620300 [debug] [MainThread]: Connection 'list_npc_brain_main' was properly closed.
+[0m14:02:46.620300 [debug] [MainThread]: Connection 'model.npc_brain.gold' was properly closed.
+[0m14:02:46.621300 [info ] [MainThread]: 
+[0m14:02:46.621300 [info ] [MainThread]: Finished running 2 table models in 0 hours 0 minutes and 0.43 seconds (0.43s).
+[0m14:02:46.622308 [debug] [MainThread]: Command end result
+[0m14:02:46.638858 [debug] [MainThread]: Wrote artifact WritableManifest to dbt_npc\target\manifest.json
+[0m14:02:46.640361 [debug] [MainThread]: Wrote artifact SemanticManifest to dbt_npc\target\semantic_manifest.json
+[0m14:02:46.644877 [debug] [MainThread]: Wrote artifact RunExecutionResult to dbt_npc\target\run_results.json
+[0m14:02:46.644877 [info ] [MainThread]: 
+[0m14:02:46.644877 [info ] [MainThread]: [32mCompleted successfully[0m
+[0m14:02:46.645881 [info ] [MainThread]: 
+[0m14:02:46.645881 [info ] [MainThread]: Done. PASS=2 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=2
+[0m14:02:46.646895 [debug] [MainThread]: Command `dbt run` succeeded at 14:02:46.646895 after 1.87 seconds
+[0m14:02:46.646895 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000233936D2910>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002338C7D6290>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002338C7D6990>]}
+[0m14:02:46.646895 [debug] [MainThread]: Flushing usage events
+[0m14:02:47.466212 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m14:15:26.007099 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002476CE9A9D0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002476CE65490>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002476CE9F090>]}
+
+
+============================== 14:15:26.012916 | 29061ff6-6579-4408-bb1f-f1339d0b934b ==============================
+[0m14:15:26.012916 [info ] [MainThread]: Running with dbt=1.11.12
+[0m14:15:26.013430 [debug] [MainThread]: running dbt with arguments {'version_check': 'True', 'no_print': 'None', 'static_parser': 'True', 'target_path': 'None', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'printer_width': '80', 'write_json': 'True', 'introspect': 'True', 'log_cache_events': 'False', 'empty': 'False', 'cache_selected_only': 'False', 'fail_fast': 'False', 'debug': 'False', 'log_format': 'default', 'partial_parse': 'True', 'send_anonymous_usage_stats': 'True', 'quiet': 'False', 'warn_error': 'None', 'profiles_dir': 'dbt_npc', 'indirect_selection': 'eager', 'use_colors': 'True', 'invocation_command': 'dbt run --project-dir dbt_npc --profiles-dir dbt_npc', 'use_experimental_parser': 'False', 'log_path': 'dbt_npc\\logs'}
+[0m14:15:26.542409 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': '29061ff6-6579-4408-bb1f-f1339d0b934b', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002476CDCDCD0>]}
+[0m14:15:26.582363 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': '29061ff6-6579-4408-bb1f-f1339d0b934b', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000024768707AD0>]}
+[0m14:15:26.586561 [info ] [MainThread]: Registered adapter: duckdb=1.10.1
+[0m14:15:26.817770 [debug] [MainThread]: checksum: f368f5348cf42803b94ef7fb8257ecf3bf9a9a16dd9c8c51fe5172f2dbeb457f, vars: {}, profile: , target: , version: 1.11.12
+[0m14:15:27.002575 [debug] [MainThread]: Partial parsing enabled: 0 files deleted, 0 files added, 0 files changed.
+[0m14:15:27.002575 [debug] [MainThread]: Nothing changed, skipping partial parsing.
+[0m14:15:27.003574 [debug] [MainThread]: Partial parsing enabled, no changes found, skipping parsing
+[0m14:15:27.021613 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': '29061ff6-6579-4408-bb1f-f1339d0b934b', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002476D3B1290>]}
+[0m14:15:27.064354 [debug] [MainThread]: Wrote artifact WritableManifest to dbt_npc\target\manifest.json
+[0m14:15:27.067861 [debug] [MainThread]: Wrote artifact SemanticManifest to dbt_npc\target\semantic_manifest.json
+[0m14:15:27.085540 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'resource_counts', 'label': '29061ff6-6579-4408-bb1f-f1339d0b934b', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002476D335750>]}
+[0m14:15:27.085540 [info ] [MainThread]: Found 2 models, 485 macros
+[0m14:15:27.086545 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'runnable_timing', 'label': '29061ff6-6579-4408-bb1f-f1339d0b934b', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002476CF09690>]}
+[0m14:15:27.087545 [info ] [MainThread]: 
+[0m14:15:27.087545 [info ] [MainThread]: Concurrency: 1 threads (target='dev')
+[0m14:15:27.088898 [info ] [MainThread]: 
+[0m14:15:27.088898 [debug] [MainThread]: Acquiring new duckdb connection 'master'
+[0m14:15:27.091902 [debug] [ThreadPool]: Acquiring new duckdb connection 'list_npc_brain'
+[0m14:15:27.266180 [debug] [ThreadPool]: Using duckdb connection "list_npc_brain"
+[0m14:15:27.266180 [debug] [ThreadPool]: On list_npc_brain: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "connection_name": "list_npc_brain"} */
+
+    
+    select schema_name
+    from system.information_schema.schemata
+    
+    where lower(catalog_name) = '"npc_brain"'
+    
+  
+  
+[0m14:15:27.267568 [debug] [ThreadPool]: Opening a new connection, currently in state init
+[0m14:15:27.310678 [debug] [ThreadPool]: SQL status: OK in 0.044 seconds
+[0m14:15:27.312679 [debug] [ThreadPool]: On list_npc_brain: Close
+[0m14:15:27.313679 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly list_npc_brain, now create_npc_brain_main)
+[0m14:15:27.313679 [debug] [ThreadPool]: Creating schema "database: "npc_brain"
+schema: "main"
+"
+[0m14:15:27.318197 [debug] [ThreadPool]: Using duckdb connection "create_npc_brain_main"
+[0m14:15:27.318197 [debug] [ThreadPool]: On create_npc_brain_main: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "connection_name": "create_npc_brain_main"} */
+
+    
+        select type from duckdb_databases()
+        where lower(database_name)='npc_brain'
+        and type='sqlite'
+    
+  
+[0m14:15:27.319195 [debug] [ThreadPool]: Opening a new connection, currently in state closed
+[0m14:15:27.320193 [debug] [ThreadPool]: SQL status: OK in 0.001 seconds
+[0m14:15:27.321202 [debug] [ThreadPool]: Using duckdb connection "create_npc_brain_main"
+[0m14:15:27.321202 [debug] [ThreadPool]: On create_npc_brain_main: BEGIN
+[0m14:15:27.322194 [debug] [ThreadPool]: SQL status: OK in 0.000 seconds
+[0m14:15:27.322194 [debug] [ThreadPool]: Using duckdb connection "create_npc_brain_main"
+[0m14:15:27.323206 [debug] [ThreadPool]: On create_npc_brain_main: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "connection_name": "create_npc_brain_main"} */
+
+    
+    
+        create schema if not exists "npc_brain"."main"
+    
+[0m14:15:27.323206 [debug] [ThreadPool]: SQL status: OK in 0.001 seconds
+[0m14:15:27.324192 [debug] [ThreadPool]: On create_npc_brain_main: COMMIT
+[0m14:15:27.324192 [debug] [ThreadPool]: Using duckdb connection "create_npc_brain_main"
+[0m14:15:27.324192 [debug] [ThreadPool]: On create_npc_brain_main: COMMIT
+[0m14:15:27.325697 [debug] [ThreadPool]: SQL status: OK in 0.000 seconds
+[0m14:15:27.325697 [debug] [ThreadPool]: On create_npc_brain_main: Close
+[0m14:15:27.326702 [debug] [ThreadPool]: Acquiring new duckdb connection 'list_npc_brain_main'
+[0m14:15:27.330701 [debug] [ThreadPool]: Using duckdb connection "list_npc_brain_main"
+[0m14:15:27.330701 [debug] [ThreadPool]: On list_npc_brain_main: BEGIN
+[0m14:15:27.331702 [debug] [ThreadPool]: Opening a new connection, currently in state init
+[0m14:15:27.331702 [debug] [ThreadPool]: SQL status: OK in 0.001 seconds
+[0m14:15:27.331702 [debug] [ThreadPool]: Using duckdb connection "list_npc_brain_main"
+[0m14:15:27.332709 [debug] [ThreadPool]: On list_npc_brain_main: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "connection_name": "list_npc_brain_main"} */
+select
+      'npc_brain' as database,
+      table_name as name,
+      table_schema as schema,
+      CASE table_type
+        WHEN 'BASE TABLE' THEN 'table'
+        WHEN 'VIEW' THEN 'view'
+        WHEN 'LOCAL TEMPORARY' THEN 'table'
+        END as type
+    from system.information_schema.tables
+    where lower(table_schema) = 'main'
+    and lower(table_catalog) = 'npc_brain'
+  
+[0m14:15:27.338027 [debug] [ThreadPool]: SQL status: OK in 0.005 seconds
+[0m14:15:27.339032 [debug] [ThreadPool]: On list_npc_brain_main: ROLLBACK
+[0m14:15:27.340544 [debug] [ThreadPool]: Failed to rollback 'list_npc_brain_main'
+[0m14:15:27.341550 [debug] [ThreadPool]: On list_npc_brain_main: Close
+[0m14:15:27.342551 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'runnable_timing', 'label': '29061ff6-6579-4408-bb1f-f1339d0b934b', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002476CEFE090>]}
+[0m14:15:27.342551 [debug] [MainThread]: Using duckdb connection "master"
+[0m14:15:27.343549 [debug] [MainThread]: On master: BEGIN
+[0m14:15:27.343549 [debug] [MainThread]: Opening a new connection, currently in state init
+[0m14:15:27.344550 [debug] [MainThread]: SQL status: OK in 0.001 seconds
+[0m14:15:27.344550 [debug] [MainThread]: On master: COMMIT
+[0m14:15:27.344550 [debug] [MainThread]: Using duckdb connection "master"
+[0m14:15:27.345549 [debug] [MainThread]: On master: COMMIT
+[0m14:15:27.345549 [debug] [MainThread]: SQL status: OK in 0.000 seconds
+[0m14:15:27.345549 [debug] [MainThread]: On master: Close
+[0m14:15:27.352589 [debug] [Thread-1 (]: Began running node model.npc_brain.silver
+[0m14:15:27.352589 [info ] [Thread-1 (]: 1 of 2 START sql table model main.silver ....................................... [RUN]
+[0m14:15:27.353591 [debug] [Thread-1 (]: Acquiring new duckdb connection 'model.npc_brain.silver'
+[0m14:15:27.354590 [debug] [Thread-1 (]: Began compiling node model.npc_brain.silver
+[0m14:15:27.359749 [debug] [Thread-1 (]: Writing injected SQL for node "model.npc_brain.silver"
+[0m14:15:27.362757 [debug] [Thread-1 (]: Began executing node model.npc_brain.silver
+[0m14:15:27.382530 [debug] [Thread-1 (]: Writing runtime sql for node "model.npc_brain.silver"
+[0m14:15:27.383531 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:15:27.384531 [debug] [Thread-1 (]: On model.npc_brain.silver: BEGIN
+[0m14:15:27.384531 [debug] [Thread-1 (]: Opening a new connection, currently in state init
+[0m14:15:27.385627 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+[0m14:15:27.385627 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:15:27.385627 [debug] [Thread-1 (]: On model.npc_brain.silver: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.silver"} */
+
+  
+    
+    
+
+    create  table
+      "npc_brain"."main"."silver__dbt_tmp"
+  
+    as (
+      
+
+WITH base AS (
+    SELECT * FROM read_parquet('data/bronze.parquet')
+),
+
+enriched AS (
+    SELECT
+        *,
+        COALESCE(nearest_gold_direction, 'AUCUN') AS nearest_gold_direction_clean,
+        COALESCE(nearest_gold_distance,  0.0)      AS nearest_gold_distance_clean,
+
+        CASE
+            WHEN golds_count = 0 OR decision IS NULL THEN FALSE
+            WHEN decision = 'HAUT'   AND nearest_gold_direction IN ('NORD', 'NORD-EST', 'NORD-OUEST')   THEN TRUE
+            WHEN decision = 'BAS'    AND nearest_gold_direction IN ('SUD',  'SUD-EST',  'SUD-OUEST')    THEN TRUE
+            WHEN decision = 'GAUCHE' AND nearest_gold_direction IN ('OUEST', 'NORD-OUEST', 'SUD-OUEST') THEN TRUE
+            WHEN decision = 'DROITE' AND nearest_gold_direction IN ('EST',   'NORD-EST',   'SUD-EST')   THEN TRUE
+            ELSE FALSE
+        END AS decision_correct,
+
+        SUM(gold_collected::INT) OVER (
+            PARTITION BY simulation_id ORDER BY turn
+        ) AS gold_collected_cumsum,
+
+        ((turn - 1) / 5) * 5 + 1 AS turn_block,
+
+        ABS(player_row - LAG(player_row, 1, player_row) OVER (PARTITION BY simulation_id ORDER BY turn))
+        + ABS(player_col - LAG(player_col, 1, player_col) OVER (PARTITION BY simulation_id ORDER BY turn))
+            AS manhattan_move
+
+    FROM base
+)
+
+SELECT
+    simulation_id, model, turn, player_row, player_col,
+    golds_count, ennemies_count,
+    nearest_gold_direction_clean AS nearest_gold_direction,
+    nearest_gold_distance_clean  AS nearest_gold_distance,
+    blocked_directions,
+    decision, moved, was_blocked, gold_collected,
+    gold_remaining, initial_gold_count,
+    decision_correct, gold_collected_cumsum, turn_block, manhattan_move
+FROM enriched
+    );
+  
+  
+[0m14:15:27.420626 [debug] [Thread-1 (]: SQL status: OK in 0.035 seconds
+[0m14:15:27.425627 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:15:27.425627 [debug] [Thread-1 (]: On model.npc_brain.silver: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.silver"} */
+
+    SELECT index_name
+    FROM duckdb_indexes()
+    WHERE schema_name = 'main'
+      AND table_name = 'silver'
+  
+[0m14:15:27.425627 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+[0m14:15:27.427048 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:15:27.428048 [debug] [Thread-1 (]: On model.npc_brain.silver: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.silver"} */
+
+    SELECT COUNT(*) as remaining_indexes
+    FROM duckdb_indexes()
+    WHERE schema_name = 'main'
+      AND table_name = 'silver'
+  
+[0m14:15:27.428048 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+[0m14:15:27.432514 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:15:27.433514 [debug] [Thread-1 (]: On model.npc_brain.silver: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.silver"} */
+alter table "npc_brain"."main"."silver" rename to "silver__dbt_backup"
+[0m14:15:27.434513 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+[0m14:15:27.436018 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:15:27.437023 [debug] [Thread-1 (]: On model.npc_brain.silver: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.silver"} */
+alter table "npc_brain"."main"."silver__dbt_tmp" rename to "silver"
+[0m14:15:27.437023 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+[0m14:15:27.447549 [debug] [Thread-1 (]: On model.npc_brain.silver: COMMIT
+[0m14:15:27.447549 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:15:27.447549 [debug] [Thread-1 (]: On model.npc_brain.silver: COMMIT
+[0m14:15:27.450553 [debug] [Thread-1 (]: SQL status: OK in 0.002 seconds
+[0m14:15:27.454556 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:15:27.454556 [debug] [Thread-1 (]: On model.npc_brain.silver: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.silver"} */
+
+      drop table if exists "npc_brain"."main"."silver__dbt_backup" cascade
+    
+[0m14:15:27.455561 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+[0m14:15:27.457630 [debug] [Thread-1 (]: On model.npc_brain.silver: Close
+[0m14:15:27.459629 [debug] [Thread-1 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '29061ff6-6579-4408-bb1f-f1339d0b934b', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002476D845A90>]}
+[0m14:15:27.459629 [info ] [Thread-1 (]: 1 of 2 OK created sql table model main.silver .................................. [[32mOK[0m in 0.10s]
+[0m14:15:27.460630 [debug] [Thread-1 (]: Finished running node model.npc_brain.silver
+[0m14:15:27.461227 [debug] [Thread-1 (]: Began running node model.npc_brain.gold
+[0m14:15:27.461227 [info ] [Thread-1 (]: 2 of 2 START sql table model main.gold ......................................... [RUN]
+[0m14:15:27.462233 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.npc_brain.silver, now model.npc_brain.gold)
+[0m14:15:27.462233 [debug] [Thread-1 (]: Began compiling node model.npc_brain.gold
+[0m14:15:27.463232 [debug] [Thread-1 (]: Writing injected SQL for node "model.npc_brain.gold"
+[0m14:15:27.467160 [debug] [Thread-1 (]: Began executing node model.npc_brain.gold
+[0m14:15:27.470240 [debug] [Thread-1 (]: Writing runtime sql for node "model.npc_brain.gold"
+[0m14:15:27.471240 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:15:27.472241 [debug] [Thread-1 (]: On model.npc_brain.gold: BEGIN
+[0m14:15:27.472241 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m14:15:27.473241 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+[0m14:15:27.473241 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:15:27.474241 [debug] [Thread-1 (]: On model.npc_brain.gold: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.gold"} */
+
+  
+    
+    
+
+    create  table
+      "npc_brain"."main"."gold__dbt_tmp"
+  
+    as (
+      
+
+WITH agg AS (
+    SELECT
+        simulation_id,
+        MAX(turn)                            AS total_turns,
+        SUM(gold_collected::INT)             AS gold_collected,
+        MAX(initial_gold_count)              AS initial_gold,
+        SUM(was_blocked::INT)                AS blocked_turns,
+        SUM(decision_correct::INT)           AS correct_decisions,
+        COUNT(*)                             AS total_decisions,
+        ROUND(AVG(nearest_gold_distance), 4) AS avg_nearest_gold_dist
+    FROM "npc_brain"."main"."silver"
+    GROUP BY simulation_id
+),
+
+kpis AS (
+    SELECT *,
+        ROUND(gold_collected  * 1.0 / NULLIF(initial_gold,     0), 4) AS gold_collection_rate,
+        ROUND(correct_decisions * 1.0 / NULLIF(total_decisions, 0), 4) AS decision_accuracy
+    FROM agg
+)
+
+SELECT *,
+    ROUND(
+        gold_collection_rate * 0.6
+        + decision_accuracy  * 0.3
+        + (1.0 - blocked_turns * 1.0 / NULLIF(total_turns, 0)) * 0.1
+    , 3) AS efficiency_score,
+
+    CASE
+        WHEN gold_collection_rate = 1.0  THEN 'Victoire complète'
+        WHEN gold_collection_rate >= 0.5 THEN 'Victoire partielle'
+        WHEN gold_collected > 0          THEN 'Progrès minimal'
+        ELSE 'Échec'
+    END AS simulation_type
+
+FROM kpis
+    );
+  
+  
+[0m14:15:27.485349 [debug] [Thread-1 (]: SQL status: OK in 0.011 seconds
+[0m14:15:27.486354 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:15:27.486354 [debug] [Thread-1 (]: On model.npc_brain.gold: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.gold"} */
+
+    SELECT index_name
+    FROM duckdb_indexes()
+    WHERE schema_name = 'main'
+      AND table_name = 'gold'
+  
+[0m14:15:27.487354 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+[0m14:15:27.488359 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:15:27.489360 [debug] [Thread-1 (]: On model.npc_brain.gold: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.gold"} */
+
+    SELECT COUNT(*) as remaining_indexes
+    FROM duckdb_indexes()
+    WHERE schema_name = 'main'
+      AND table_name = 'gold'
+  
+[0m14:15:27.490360 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+[0m14:15:27.492359 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:15:27.492359 [debug] [Thread-1 (]: On model.npc_brain.gold: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.gold"} */
+alter table "npc_brain"."main"."gold" rename to "gold__dbt_backup"
+[0m14:15:27.493360 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+[0m14:15:27.495361 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:15:27.496489 [debug] [Thread-1 (]: On model.npc_brain.gold: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.gold"} */
+alter table "npc_brain"."main"."gold__dbt_tmp" rename to "gold"
+[0m14:15:27.496489 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+[0m14:15:27.498490 [debug] [Thread-1 (]: On model.npc_brain.gold: COMMIT
+[0m14:15:27.498490 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:15:27.499489 [debug] [Thread-1 (]: On model.npc_brain.gold: COMMIT
+[0m14:15:27.501488 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+[0m14:15:27.503489 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:15:27.504489 [debug] [Thread-1 (]: On model.npc_brain.gold: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.gold"} */
+
+      drop table if exists "npc_brain"."main"."gold__dbt_backup" cascade
+    
+[0m14:15:27.505745 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+[0m14:15:27.506753 [debug] [Thread-1 (]: On model.npc_brain.gold: Close
+[0m14:15:27.506753 [debug] [Thread-1 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '29061ff6-6579-4408-bb1f-f1339d0b934b', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002476E95A090>]}
+[0m14:15:27.507758 [info ] [Thread-1 (]: 2 of 2 OK created sql table model main.gold .................................... [[32mOK[0m in 0.05s]
+[0m14:15:27.507758 [debug] [Thread-1 (]: Finished running node model.npc_brain.gold
+[0m14:15:27.508757 [debug] [MainThread]: Using duckdb connection "master"
+[0m14:15:27.509757 [debug] [MainThread]: On master: BEGIN
+[0m14:15:27.509757 [debug] [MainThread]: Opening a new connection, currently in state closed
+[0m14:15:27.509757 [debug] [MainThread]: SQL status: OK in 0.000 seconds
+[0m14:15:27.510757 [debug] [MainThread]: On master: COMMIT
+[0m14:15:27.510757 [debug] [MainThread]: Using duckdb connection "master"
+[0m14:15:27.510757 [debug] [MainThread]: On master: COMMIT
+[0m14:15:27.511758 [debug] [MainThread]: SQL status: OK in 0.000 seconds
+[0m14:15:27.511758 [debug] [MainThread]: On master: Close
+[0m14:15:27.511758 [debug] [MainThread]: Connection 'master' was properly closed.
+[0m14:15:27.512759 [debug] [MainThread]: Connection 'create_npc_brain_main' was properly closed.
+[0m14:15:27.512759 [debug] [MainThread]: Connection 'list_npc_brain_main' was properly closed.
+[0m14:15:27.512759 [debug] [MainThread]: Connection 'model.npc_brain.gold' was properly closed.
+[0m14:15:27.513758 [info ] [MainThread]: 
+[0m14:15:27.513758 [info ] [MainThread]: Finished running 2 table models in 0 hours 0 minutes and 0.42 seconds (0.42s).
+[0m14:15:27.513758 [debug] [MainThread]: Command end result
+[0m14:15:27.531779 [debug] [MainThread]: Wrote artifact WritableManifest to dbt_npc\target\manifest.json
+[0m14:15:27.533664 [debug] [MainThread]: Wrote artifact SemanticManifest to dbt_npc\target\semantic_manifest.json
+[0m14:15:27.538291 [debug] [MainThread]: Wrote artifact RunExecutionResult to dbt_npc\target\run_results.json
+[0m14:15:27.538796 [info ] [MainThread]: 
+[0m14:15:27.538796 [info ] [MainThread]: [32mCompleted successfully[0m
+[0m14:15:27.538796 [info ] [MainThread]: 
+[0m14:15:27.538796 [info ] [MainThread]: Done. PASS=2 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=2
+[0m14:15:27.540301 [debug] [MainThread]: Command `dbt run` succeeded at 14:15:27.540301 after 1.68 seconds
+[0m14:15:27.540301 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002476CEC2750>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000247640B67D0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000247640B6290>]}
+[0m14:15:27.541307 [debug] [MainThread]: Flushing usage events
+[0m14:15:28.070556 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m14:18:11.139679 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AB37C1A8D0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AB37B5BB90>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AB37C1B750>]}
+
+
+============================== 14:18:11.145679 | c758633c-849a-48c3-af42-b47bcf869a9c ==============================
+[0m14:18:11.145679 [info ] [MainThread]: Running with dbt=1.11.12
+[0m14:18:11.147041 [debug] [MainThread]: running dbt with arguments {'static_parser': 'True', 'no_print': 'None', 'version_check': 'True', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'target_path': 'None', 'printer_width': '80', 'write_json': 'True', 'empty': 'False', 'log_cache_events': 'False', 'introspect': 'True', 'cache_selected_only': 'False', 'fail_fast': 'False', 'debug': 'False', 'log_format': 'default', 'partial_parse': 'True', 'send_anonymous_usage_stats': 'True', 'quiet': 'False', 'warn_error': 'None', 'profiles_dir': 'dbt_npc', 'indirect_selection': 'eager', 'use_colors': 'True', 'invocation_command': 'dbt run --project-dir dbt_npc --profiles-dir dbt_npc', 'use_experimental_parser': 'False', 'log_path': 'dbt_npc\\logs'}
+[0m14:18:11.841499 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': 'c758633c-849a-48c3-af42-b47bcf869a9c', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AB37C80850>]}
+[0m14:18:11.878972 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': 'c758633c-849a-48c3-af42-b47bcf869a9c', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AB334D73D0>]}
+[0m14:18:11.882966 [info ] [MainThread]: Registered adapter: duckdb=1.10.1
+[0m14:18:12.116479 [debug] [MainThread]: checksum: f368f5348cf42803b94ef7fb8257ecf3bf9a9a16dd9c8c51fe5172f2dbeb457f, vars: {}, profile: , target: , version: 1.11.12
+[0m14:18:12.295173 [debug] [MainThread]: Partial parsing enabled: 0 files deleted, 0 files added, 0 files changed.
+[0m14:18:12.295173 [debug] [MainThread]: Nothing changed, skipping partial parsing.
+[0m14:18:12.295677 [debug] [MainThread]: Partial parsing enabled, no changes found, skipping parsing
+[0m14:18:12.311199 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': 'c758633c-849a-48c3-af42-b47bcf869a9c', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AB38130250>]}
+[0m14:18:12.353488 [debug] [MainThread]: Wrote artifact WritableManifest to dbt_npc\target\manifest.json
+[0m14:18:12.355994 [debug] [MainThread]: Wrote artifact SemanticManifest to dbt_npc\target\semantic_manifest.json
+[0m14:18:12.372436 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'resource_counts', 'label': 'c758633c-849a-48c3-af42-b47bcf869a9c', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AB380A57D0>]}
+[0m14:18:12.373437 [info ] [MainThread]: Found 2 models, 485 macros
+[0m14:18:12.373437 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'runnable_timing', 'label': 'c758633c-849a-48c3-af42-b47bcf869a9c', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AB380C0190>]}
+[0m14:18:12.375438 [info ] [MainThread]: 
+[0m14:18:12.375438 [info ] [MainThread]: Concurrency: 1 threads (target='dev')
+[0m14:18:12.375943 [info ] [MainThread]: 
+[0m14:18:12.375943 [debug] [MainThread]: Acquiring new duckdb connection 'master'
+[0m14:18:12.378954 [debug] [ThreadPool]: Acquiring new duckdb connection 'list_npc_brain'
+[0m14:18:12.710060 [debug] [ThreadPool]: Using duckdb connection "list_npc_brain"
+[0m14:18:12.710060 [debug] [ThreadPool]: On list_npc_brain: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "connection_name": "list_npc_brain"} */
+
+    
+    select schema_name
+    from system.information_schema.schemata
+    
+    where lower(catalog_name) = '"npc_brain"'
+    
+  
+  
+[0m14:18:12.711067 [debug] [ThreadPool]: Opening a new connection, currently in state init
+[0m14:18:12.766615 [debug] [ThreadPool]: SQL status: OK in 0.056 seconds
+[0m14:18:12.768615 [debug] [ThreadPool]: On list_npc_brain: Close
+[0m14:18:12.769615 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly list_npc_brain, now create_npc_brain_main)
+[0m14:18:12.769615 [debug] [ThreadPool]: Creating schema "database: "npc_brain"
+schema: "main"
+"
+[0m14:18:12.773662 [debug] [ThreadPool]: Using duckdb connection "create_npc_brain_main"
+[0m14:18:12.774663 [debug] [ThreadPool]: On create_npc_brain_main: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "connection_name": "create_npc_brain_main"} */
+
+    
+        select type from duckdb_databases()
+        where lower(database_name)='npc_brain'
+        and type='sqlite'
+    
+  
+[0m14:18:12.774663 [debug] [ThreadPool]: Opening a new connection, currently in state closed
+[0m14:18:12.775665 [debug] [ThreadPool]: SQL status: OK in 0.001 seconds
+[0m14:18:12.776946 [debug] [ThreadPool]: Using duckdb connection "create_npc_brain_main"
+[0m14:18:12.776946 [debug] [ThreadPool]: On create_npc_brain_main: BEGIN
+[0m14:18:12.777945 [debug] [ThreadPool]: SQL status: OK in 0.000 seconds
+[0m14:18:12.777945 [debug] [ThreadPool]: Using duckdb connection "create_npc_brain_main"
+[0m14:18:12.777945 [debug] [ThreadPool]: On create_npc_brain_main: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "connection_name": "create_npc_brain_main"} */
+
+    
+    
+        create schema if not exists "npc_brain"."main"
+    
+[0m14:18:12.779754 [debug] [ThreadPool]: SQL status: OK in 0.001 seconds
+[0m14:18:12.779754 [debug] [ThreadPool]: On create_npc_brain_main: COMMIT
+[0m14:18:12.780766 [debug] [ThreadPool]: Using duckdb connection "create_npc_brain_main"
+[0m14:18:12.780766 [debug] [ThreadPool]: On create_npc_brain_main: COMMIT
+[0m14:18:12.780766 [debug] [ThreadPool]: SQL status: OK in 0.000 seconds
+[0m14:18:12.781759 [debug] [ThreadPool]: On create_npc_brain_main: Close
+[0m14:18:12.781759 [debug] [ThreadPool]: Acquiring new duckdb connection 'list_npc_brain_main'
+[0m14:18:12.786322 [debug] [ThreadPool]: Using duckdb connection "list_npc_brain_main"
+[0m14:18:12.786322 [debug] [ThreadPool]: On list_npc_brain_main: BEGIN
+[0m14:18:12.786322 [debug] [ThreadPool]: Opening a new connection, currently in state init
+[0m14:18:12.787315 [debug] [ThreadPool]: SQL status: OK in 0.001 seconds
+[0m14:18:12.788314 [debug] [ThreadPool]: Using duckdb connection "list_npc_brain_main"
+[0m14:18:12.788314 [debug] [ThreadPool]: On list_npc_brain_main: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "connection_name": "list_npc_brain_main"} */
+select
+      'npc_brain' as database,
+      table_name as name,
+      table_schema as schema,
+      CASE table_type
+        WHEN 'BASE TABLE' THEN 'table'
+        WHEN 'VIEW' THEN 'view'
+        WHEN 'LOCAL TEMPORARY' THEN 'table'
+        END as type
+    from system.information_schema.tables
+    where lower(table_schema) = 'main'
+    and lower(table_catalog) = 'npc_brain'
+  
+[0m14:18:12.795323 [debug] [ThreadPool]: SQL status: OK in 0.007 seconds
+[0m14:18:12.797328 [debug] [ThreadPool]: On list_npc_brain_main: ROLLBACK
+[0m14:18:12.798329 [debug] [ThreadPool]: Failed to rollback 'list_npc_brain_main'
+[0m14:18:12.798329 [debug] [ThreadPool]: On list_npc_brain_main: Close
+[0m14:18:12.799336 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'runnable_timing', 'label': 'c758633c-849a-48c3-af42-b47bcf869a9c', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AB36536590>]}
+[0m14:18:12.800330 [debug] [MainThread]: Using duckdb connection "master"
+[0m14:18:12.800330 [debug] [MainThread]: On master: BEGIN
+[0m14:18:12.800330 [debug] [MainThread]: Opening a new connection, currently in state init
+[0m14:18:12.801328 [debug] [MainThread]: SQL status: OK in 0.001 seconds
+[0m14:18:12.801328 [debug] [MainThread]: On master: COMMIT
+[0m14:18:12.801328 [debug] [MainThread]: Using duckdb connection "master"
+[0m14:18:12.802329 [debug] [MainThread]: On master: COMMIT
+[0m14:18:12.802329 [debug] [MainThread]: SQL status: OK in 0.000 seconds
+[0m14:18:12.802329 [debug] [MainThread]: On master: Close
+[0m14:18:12.810914 [debug] [Thread-1 (]: Began running node model.npc_brain.silver
+[0m14:18:12.810914 [info ] [Thread-1 (]: 1 of 2 START sql table model main.silver ....................................... [RUN]
+[0m14:18:12.811914 [debug] [Thread-1 (]: Acquiring new duckdb connection 'model.npc_brain.silver'
+[0m14:18:12.811914 [debug] [Thread-1 (]: Began compiling node model.npc_brain.silver
+[0m14:18:12.817425 [debug] [Thread-1 (]: Writing injected SQL for node "model.npc_brain.silver"
+[0m14:18:12.819423 [debug] [Thread-1 (]: Began executing node model.npc_brain.silver
+[0m14:18:12.838314 [debug] [Thread-1 (]: Writing runtime sql for node "model.npc_brain.silver"
+[0m14:18:12.839152 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:18:12.840157 [debug] [Thread-1 (]: On model.npc_brain.silver: BEGIN
+[0m14:18:12.840157 [debug] [Thread-1 (]: Opening a new connection, currently in state init
+[0m14:18:12.841156 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+[0m14:18:12.841156 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:18:12.841156 [debug] [Thread-1 (]: On model.npc_brain.silver: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.silver"} */
+
+  
+    
+    
+
+    create  table
+      "npc_brain"."main"."silver__dbt_tmp"
+  
+    as (
+      
+
+WITH base AS (
+    SELECT * FROM read_parquet('data/bronze.parquet')
+),
+
+enriched AS (
+    SELECT
+        *,
+        COALESCE(nearest_gold_direction, 'AUCUN') AS nearest_gold_direction_clean,
+        COALESCE(nearest_gold_distance,  0.0)      AS nearest_gold_distance_clean,
+
+        CASE
+            WHEN golds_count = 0 OR decision IS NULL THEN FALSE
+            WHEN decision = 'HAUT'   AND nearest_gold_direction IN ('NORD', 'NORD-EST', 'NORD-OUEST')   THEN TRUE
+            WHEN decision = 'BAS'    AND nearest_gold_direction IN ('SUD',  'SUD-EST',  'SUD-OUEST')    THEN TRUE
+            WHEN decision = 'GAUCHE' AND nearest_gold_direction IN ('OUEST', 'NORD-OUEST', 'SUD-OUEST') THEN TRUE
+            WHEN decision = 'DROITE' AND nearest_gold_direction IN ('EST',   'NORD-EST',   'SUD-EST')   THEN TRUE
+            ELSE FALSE
+        END AS decision_correct,
+
+        SUM(gold_collected::INT) OVER (
+            PARTITION BY simulation_id ORDER BY turn
+        ) AS gold_collected_cumsum,
+
+        ((turn - 1) / 5) * 5 + 1 AS turn_block,
+
+        ABS(player_row - LAG(player_row, 1, player_row) OVER (PARTITION BY simulation_id ORDER BY turn))
+        + ABS(player_col - LAG(player_col, 1, player_col) OVER (PARTITION BY simulation_id ORDER BY turn))
+            AS manhattan_move
+
+    FROM base
+)
+
+SELECT
+    simulation_id, model, turn, player_row, player_col,
+    golds_count, ennemies_count,
+    nearest_gold_direction_clean AS nearest_gold_direction,
+    nearest_gold_distance_clean  AS nearest_gold_distance,
+    blocked_directions,
+    decision, moved, was_blocked, gold_collected,
+    gold_remaining, initial_gold_count,
+    decision_correct, gold_collected_cumsum, turn_block, manhattan_move
+FROM enriched
+    );
+  
+  
+[0m14:18:12.892017 [debug] [Thread-1 (]: SQL status: OK in 0.050 seconds
+[0m14:18:12.895535 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:18:12.896557 [debug] [Thread-1 (]: On model.npc_brain.silver: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.silver"} */
+
+    SELECT index_name
+    FROM duckdb_indexes()
+    WHERE schema_name = 'main'
+      AND table_name = 'silver'
+  
+[0m14:18:12.897557 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+[0m14:18:12.898557 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:18:12.898557 [debug] [Thread-1 (]: On model.npc_brain.silver: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.silver"} */
+
+    SELECT COUNT(*) as remaining_indexes
+    FROM duckdb_indexes()
+    WHERE schema_name = 'main'
+      AND table_name = 'silver'
+  
+[0m14:18:12.899559 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+[0m14:18:12.903564 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:18:12.904560 [debug] [Thread-1 (]: On model.npc_brain.silver: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.silver"} */
+alter table "npc_brain"."main"."silver" rename to "silver__dbt_backup"
+[0m14:18:12.905598 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+[0m14:18:12.907685 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:18:12.907685 [debug] [Thread-1 (]: On model.npc_brain.silver: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.silver"} */
+alter table "npc_brain"."main"."silver__dbt_tmp" rename to "silver"
+[0m14:18:12.908677 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+[0m14:18:12.920713 [debug] [Thread-1 (]: On model.npc_brain.silver: COMMIT
+[0m14:18:12.920713 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:18:12.921719 [debug] [Thread-1 (]: On model.npc_brain.silver: COMMIT
+[0m14:18:12.929224 [debug] [Thread-1 (]: SQL status: OK in 0.008 seconds
+[0m14:18:12.933223 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.silver"
+[0m14:18:12.933223 [debug] [Thread-1 (]: On model.npc_brain.silver: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.silver"} */
+
+      drop table if exists "npc_brain"."main"."silver__dbt_backup" cascade
+    
+[0m14:18:12.945927 [debug] [Thread-1 (]: SQL status: OK in 0.012 seconds
+[0m14:18:12.947933 [debug] [Thread-1 (]: On model.npc_brain.silver: Close
+[0m14:18:12.949933 [debug] [Thread-1 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': 'c758633c-849a-48c3-af42-b47bcf869a9c', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AB38078A90>]}
+[0m14:18:12.949933 [info ] [Thread-1 (]: 1 of 2 OK created sql table model main.silver .................................. [[32mOK[0m in 0.14s]
+[0m14:18:12.950941 [debug] [Thread-1 (]: Finished running node model.npc_brain.silver
+[0m14:18:12.951690 [debug] [Thread-1 (]: Began running node model.npc_brain.gold
+[0m14:18:12.951690 [info ] [Thread-1 (]: 2 of 2 START sql table model main.gold ......................................... [RUN]
+[0m14:18:12.952695 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.npc_brain.silver, now model.npc_brain.gold)
+[0m14:18:12.952695 [debug] [Thread-1 (]: Began compiling node model.npc_brain.gold
+[0m14:18:12.954694 [debug] [Thread-1 (]: Writing injected SQL for node "model.npc_brain.gold"
+[0m14:18:12.955694 [debug] [Thread-1 (]: Began executing node model.npc_brain.gold
+[0m14:18:12.959020 [debug] [Thread-1 (]: Writing runtime sql for node "model.npc_brain.gold"
+[0m14:18:12.959971 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:18:12.959971 [debug] [Thread-1 (]: On model.npc_brain.gold: BEGIN
+[0m14:18:12.961025 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m14:18:12.961025 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+[0m14:18:12.962031 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:18:12.962031 [debug] [Thread-1 (]: On model.npc_brain.gold: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.gold"} */
+
+  
+    
+    
+
+    create  table
+      "npc_brain"."main"."gold__dbt_tmp"
+  
+    as (
+      
+
+WITH agg AS (
+    SELECT
+        simulation_id,
+        MAX(turn)                            AS total_turns,
+        SUM(gold_collected::INT)             AS gold_collected,
+        MAX(initial_gold_count)              AS initial_gold,
+        SUM(was_blocked::INT)                AS blocked_turns,
+        SUM(decision_correct::INT)           AS correct_decisions,
+        COUNT(*)                             AS total_decisions,
+        ROUND(AVG(nearest_gold_distance), 4) AS avg_nearest_gold_dist
+    FROM "npc_brain"."main"."silver"
+    GROUP BY simulation_id
+),
+
+kpis AS (
+    SELECT *,
+        ROUND(gold_collected  * 1.0 / NULLIF(initial_gold,     0), 4) AS gold_collection_rate,
+        ROUND(correct_decisions * 1.0 / NULLIF(total_decisions, 0), 4) AS decision_accuracy
+    FROM agg
+)
+
+SELECT *,
+    ROUND(
+        gold_collection_rate * 0.6
+        + decision_accuracy  * 0.3
+        + (1.0 - blocked_turns * 1.0 / NULLIF(total_turns, 0)) * 0.1
+    , 3) AS efficiency_score,
+
+    CASE
+        WHEN gold_collection_rate = 1.0  THEN 'Victoire complète'
+        WHEN gold_collection_rate >= 0.5 THEN 'Victoire partielle'
+        WHEN gold_collected > 0          THEN 'Progrès minimal'
+        ELSE 'Échec'
+    END AS simulation_type
+
+FROM kpis
+    );
+  
+  
+[0m14:18:12.979548 [debug] [Thread-1 (]: SQL status: OK in 0.017 seconds
+[0m14:18:12.980549 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:18:12.981549 [debug] [Thread-1 (]: On model.npc_brain.gold: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.gold"} */
+
+    SELECT index_name
+    FROM duckdb_indexes()
+    WHERE schema_name = 'main'
+      AND table_name = 'gold'
+  
+[0m14:18:12.981549 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+[0m14:18:12.982556 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:18:12.982556 [debug] [Thread-1 (]: On model.npc_brain.gold: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.gold"} */
+
+    SELECT COUNT(*) as remaining_indexes
+    FROM duckdb_indexes()
+    WHERE schema_name = 'main'
+      AND table_name = 'gold'
+  
+[0m14:18:12.983549 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+[0m14:18:12.986052 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:18:12.986052 [debug] [Thread-1 (]: On model.npc_brain.gold: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.gold"} */
+alter table "npc_brain"."main"."gold" rename to "gold__dbt_backup"
+[0m14:18:12.987063 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+[0m14:18:12.989055 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:18:12.989055 [debug] [Thread-1 (]: On model.npc_brain.gold: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.gold"} */
+alter table "npc_brain"."main"."gold__dbt_tmp" rename to "gold"
+[0m14:18:12.990054 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+[0m14:18:12.991055 [debug] [Thread-1 (]: On model.npc_brain.gold: COMMIT
+[0m14:18:12.991055 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:18:12.991055 [debug] [Thread-1 (]: On model.npc_brain.gold: COMMIT
+[0m14:18:12.998629 [debug] [Thread-1 (]: SQL status: OK in 0.006 seconds
+[0m14:18:13.000629 [debug] [Thread-1 (]: Using duckdb connection "model.npc_brain.gold"
+[0m14:18:13.001629 [debug] [Thread-1 (]: On model.npc_brain.gold: /* {"app": "dbt", "dbt_version": "1.11.12", "profile_name": "npc_brain", "target_name": "dev", "node_id": "model.npc_brain.gold"} */
+
+      drop table if exists "npc_brain"."main"."gold__dbt_backup" cascade
+    
+[0m14:18:13.006065 [debug] [Thread-1 (]: SQL status: OK in 0.004 seconds
+[0m14:18:13.006065 [debug] [Thread-1 (]: On model.npc_brain.gold: Close
+[0m14:18:13.007570 [debug] [Thread-1 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': 'c758633c-849a-48c3-af42-b47bcf869a9c', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AB396DBBD0>]}
+[0m14:18:13.007570 [info ] [Thread-1 (]: 2 of 2 OK created sql table model main.gold .................................... [[32mOK[0m in 0.05s]
+[0m14:18:13.008575 [debug] [Thread-1 (]: Finished running node model.npc_brain.gold
+[0m14:18:13.009575 [debug] [MainThread]: Using duckdb connection "master"
+[0m14:18:13.009575 [debug] [MainThread]: On master: BEGIN
+[0m14:18:13.009575 [debug] [MainThread]: Opening a new connection, currently in state closed
+[0m14:18:13.010574 [debug] [MainThread]: SQL status: OK in 0.000 seconds
+[0m14:18:13.010574 [debug] [MainThread]: On master: COMMIT
+[0m14:18:13.011575 [debug] [MainThread]: Using duckdb connection "master"
+[0m14:18:13.011575 [debug] [MainThread]: On master: COMMIT
+[0m14:18:13.011575 [debug] [MainThread]: SQL status: OK in 0.000 seconds
+[0m14:18:13.012577 [debug] [MainThread]: On master: Close
+[0m14:18:13.012577 [debug] [MainThread]: Connection 'master' was properly closed.
+[0m14:18:13.013576 [debug] [MainThread]: Connection 'create_npc_brain_main' was properly closed.
+[0m14:18:13.013576 [debug] [MainThread]: Connection 'list_npc_brain_main' was properly closed.
+[0m14:18:13.013576 [debug] [MainThread]: Connection 'model.npc_brain.gold' was properly closed.
+[0m14:18:13.013576 [info ] [MainThread]: 
+[0m14:18:13.014575 [info ] [MainThread]: Finished running 2 table models in 0 hours 0 minutes and 0.64 seconds (0.64s).
+[0m14:18:13.014575 [debug] [MainThread]: Command end result
+[0m14:18:13.046539 [debug] [MainThread]: Wrote artifact WritableManifest to dbt_npc\target\manifest.json
+[0m14:18:13.049541 [debug] [MainThread]: Wrote artifact SemanticManifest to dbt_npc\target\semantic_manifest.json
+[0m14:18:13.057744 [debug] [MainThread]: Wrote artifact RunExecutionResult to dbt_npc\target\run_results.json
+[0m14:18:13.058746 [info ] [MainThread]: 
+[0m14:18:13.058746 [info ] [MainThread]: [32mCompleted successfully[0m
+[0m14:18:13.059753 [info ] [MainThread]: 
+[0m14:18:13.059753 [info ] [MainThread]: Done. PASS=2 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=2
+[0m14:18:13.060746 [debug] [MainThread]: Command `dbt run` succeeded at 14:18:13.060746 after 2.05 seconds
+[0m14:18:13.060746 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AB37C34310>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AB2EE467D0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AB2EE46290>]}
+[0m14:18:13.061747 [debug] [MainThread]: Flushing usage events
+[0m14:18:13.708572 [debug] [MainThread]: An error was encountered while trying to flush usage events

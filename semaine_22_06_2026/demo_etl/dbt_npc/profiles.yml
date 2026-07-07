@@ -1,0 +1,6 @@
+npc_brain:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: data/npc_brain.duckdb
