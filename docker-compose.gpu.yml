@@ -1,0 +1,12 @@
+# Added on top of docker-compose.yml when DEVICE=gpu: gives the worker access to
+# one NVIDIA GPU. Requires the NVIDIA driver and the NVIDIA Container Toolkit
+# on the host (with Docker Desktop on Windows: WSL 2 backend + NVIDIA driver).
+services:
+  worker:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
