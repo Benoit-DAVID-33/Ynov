@@ -23,7 +23,7 @@ WORKDIR /srv
 COPY requirements.txt requirements-ml.txt requirements-gpu.txt ./
 RUN pip install --no-cache-dir -r requirements.txt -r requirements-ml.txt
 
-# cpu (default) or gpu. The GPU image adds the CUDA libraries (about 1.5 GB);
+# cpu (default) or gpu. The GPU image adds the CUDA libraries (close to 4 GB);
 # only the NVIDIA driver and the NVIDIA Container Toolkit are needed on the host.
 ARG DEVICE=cpu
 RUN if [ "$DEVICE" = "gpu" ]; then pip install --no-cache-dir -r requirements-gpu.txt; fi

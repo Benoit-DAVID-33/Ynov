@@ -20,6 +20,8 @@ def setup_logging(service: str, settings: Settings) -> None:
         level=logging.INFO, format=_FORMAT, handlers=[logging.StreamHandler(), file_handler],
         force=True,
     )
+    # One line per HTTP request of the model downloads would drown everything else.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     # uvicorn does not propagate to the root logger: attach its errors
     # (startup, crashes, unhandled exceptions) to the file as well.
     logging.getLogger("uvicorn.error").addHandler(file_handler)

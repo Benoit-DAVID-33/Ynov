@@ -19,11 +19,22 @@ param(
 $ErrorActionPreference = "Stop"
 Set-Location (Split-Path $PSScriptRoot -Parent)
 
+# Lance une commande externe en silence et dit si elle a reussi. (Avec
+# ErrorActionPreference = Stop, sa sortie d'erreur interromprait le script.)
+function Test-Command([scriptblock]$Command) {
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = "SilentlyContinue"
+    try { & $Command *> $null; return $LASTEXITCODE -eq 0 }
+    catch { return $false }
+    finally { $ErrorActionPreference = $previous }
+}
+
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     throw "Docker introuvable : installez Docker Desktop (https://docs.docker.com/desktop/) puis relancez."
 }
-docker info *> $null
-if ($LASTEXITCODE -ne 0) { throw "Docker ne repond pas : demarrez Docker Desktop puis relancez." }
+if (-not (Test-Command { docker info })) {
+    throw "Docker ne repond pas : demarrez Docker Desktop puis relancez."
+}
 
 if ($Stop) { docker compose stop; exit $LASTEXITCODE }
 if ($Logs) { docker compose logs -f --tail 100; exit $LASTEXITCODE }
@@ -36,8 +47,7 @@ $files = @("-f", "docker-compose.yml")
 if ($Device -eq "gpu") {
     $files += "-f", "docker-compose.gpu.yml"
     # Verifie que Docker voit le GPU avant de construire une image de plusieurs Go.
-    docker run --rm --gpus all hello-world *> $null
-    if ($LASTEXITCODE -ne 0) {
+    if (-not (Test-Command { docker run --rm --gpus all hello-world })) {
         throw "-Device gpu : Docker n'a pas acces a un GPU NVIDIA (pilote NVIDIA + WSL 2 sous Windows, NVIDIA Container Toolkit sous Linux). Sinon : -Device cpu."
     }
 }

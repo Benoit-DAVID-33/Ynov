@@ -204,8 +204,8 @@ appelé en HTTP) se branche comme un modèle, voir plus bas.
    Sous Linux ou macOS : `scripts/run_docker.sh cpu` ou `scripts/run_docker.sh gpu`.
 
    Le script vérifie que Docker tourne et, en version GPU, que Docker voit bien le GPU avant
-   de construire l'image. La première construction prend plusieurs minutes (la version GPU
-   pèse environ 1,5 Go de plus).
+   de construire l'image. La première construction prend plusieurs minutes ; l'image pèse
+   1,7 Go en version CPU et 5,4 Go en version GPU (bibliothèques CUDA).
 3. Ouvrir l'application sur le port 8000 et la console d'administration sur le port 8001.
    Le premier traitement est possible dès que la console affiche le worker « en service ».
 
@@ -367,8 +367,16 @@ Une classe `SpeakerIdentifier` dont la méthode `identify(audio_path, segments)`
 
 Les tests n'ont besoin ni de GPU, ni de ffmpeg, ni de Docker, ni des modèles (transcription
 et traduction factices, ffmpeg simulé). Ils tournent sur SQLite ; pour les rejouer sur le
-PostgreSQL de la pile Docker, définir `TEST_DATABASE_URL` (ses tables sont vidées à chaque
-test : ne jamais viser une base contenant de vraies données). Le modèle factice peut aussi servir à une
+PostgreSQL de la pile Docker, définir `TEST_DATABASE_URL` vers une base dédiée (ses tables
+sont vidées à chaque test : ne jamais viser la base de l'application) :
+
+```bash
+docker compose exec db createdb -U subtitle subtitle_test
+```
+
+```bash
+docker compose run --rm --no-deps -v ./tests:/srv/tests:ro -e HOME=/tmp -e TEST_DATABASE_URL=postgresql+psycopg://subtitle:MOT_DE_PASSE@db:5432/subtitle_test api sh -c "pip install -q --user pytest httpx && python -m pytest -q -p no:cacheprovider tests"
+``` Le modèle factice peut aussi servir à une
 démonstration instantanée : `scripts\run_local.ps1 -Models fake -DefaultModel fake`.
 
 ## Vérifier les performances

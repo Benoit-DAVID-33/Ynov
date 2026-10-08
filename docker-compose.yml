@@ -3,6 +3,8 @@
 #   CPU : docker compose up -d --build
 #   GPU : DEVICE=gpu docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d --build
 
+name: subtitle-app
+
 x-app: &app
   image: subtitle-app:${DEVICE:-cpu}
   build:
@@ -44,7 +46,8 @@ services:
   # User-facing application.
   api:
     <<: *app
-    command: ["uvicorn", "app.api:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+    # No access log: the health check alone would write a line every 10 s.
+    command: ["uvicorn", "app.api:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]
     environment: *app-env
     ports:
       - "${PORT:-8000}:8000"
@@ -64,7 +67,7 @@ services:
   # It deliberately depends on nothing.
   admin:
     <<: *app
-    command: ["uvicorn", "app.admin:create_app", "--factory", "--host", "0.0.0.0", "--port", "8001"]
+    command: ["uvicorn", "app.admin:create_app", "--factory", "--host", "0.0.0.0", "--port", "8001", "--no-access-log"]
     environment:
       <<: *app-env
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?définir ADMIN_PASSWORD dans .env}

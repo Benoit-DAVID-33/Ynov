@@ -76,8 +76,8 @@ avec SQLite (`scripts/run_local.ps1`). Seule la configuration change.
 **CPU ou GPU, choisi au lancement.** L'équipe développe sur deux machines, l'une sans GPU,
 l'autre avec un GPU NVIDIA. Un seul réglage, `DEVICE`, posé par les scripts de lancement,
 détermine tout ce qui dépend du matériel : précision de calcul (int8 ou float16), modèle par
-défaut, taille des lots, et, sous Docker, l'image construite (les bibliothèques CUDA, 1,5 Go,
-ne sont installées que dans la version GPU) ainsi que l'accès du worker au GPU. Le moteur
+défaut, taille des lots, et, sous Docker, l'image construite (les bibliothèques CUDA, près de
+4 Go, ne sont installées que dans la version GPU) ainsi que l'accès du worker au GPU. Le moteur
 d'inférence (CTranslate2) et le code sont identiques dans les deux cas. Un GPU demandé mais
 inutilisable arrête le worker avec un message clair plutôt que de retomber sur le CPU en
 silence.
@@ -268,6 +268,25 @@ transcription ≈ 130 s pour 149 s de média) et `medium.en` ne tient que jusqu'
 simultanés environ. L'incrustation (`libx264`, 2 à 4 s ici selon le préréglage) tourne en parallèle de
 l'inférence mais lui prend des cœurs. Les trois autres sorties ne ré-encodent rien.
 
+### Sous Docker (CPU)
+
+Même poste, pile Docker complète (Docker Desktop, moteur WSL 2, PostgreSQL), image `cpu`,
+`whisper-small.en`, préréglage d'incrustation par défaut :
+
+| Scénario | Résultat le plus lent | × durée | Exigence |
+|---|---|---|---|
+| 10 utilisateurs simultanés, sous-titres seuls | 102,8 s | 0,69 | tenue |
+| 10 utilisateurs simultanés, vidéo incrustée | 118,0 s | 0,79 | tenue |
+
+C'est plus rapide que le lancement direct sous Windows (130,4 s et 135,6 s) : les bibliothèques
+de calcul sont mieux servies par Linux. L'exigence des 10 utilisateurs est donc tenue sur CPU
+seul, avec de la marge, dans la configuration de déploiement.
+
+Vérifié sur cette pile : construction de l'image, démarrage des quatre services, traitement
+réel des quatre types de sortie avec traduction et correction, les 87 tests automatisés rejoués
+dans l'image sur PostgreSQL, relance automatique de l'application après l'arrêt de son
+processus, console d'administration utilisable base de données arrêtée.
+
 ### Modèles multilingues
 
 Les modèles `.en` ne comprennent que l'anglais ; les modèles sans suffixe détectent la langue.
@@ -320,9 +339,9 @@ décodage comme le rendu des sous-titres restent sur le processeur.
 Sur un GPU de classe T4 / L4 en float16, faster-whisper est donné pour plusieurs fois plus
 rapide que ce CPU, ce qui laisserait de la marge pour `medium.en` à 10 utilisateurs.
 
-> **Cette configuration GPU n'a pas été mesurée, et l'image Docker n'a pas été construite** sur
-> le poste de développement principal (ni GPU NVIDIA ni Docker). La pile Docker utilise en
-> outre PostgreSQL, alors que les tests automatisés tournent sur SQLite. À valider sur la machine cible avec
+> **Cette configuration GPU n'a pas été exécutée** : pas de GPU NVIDIA sur le poste où ces
+> mesures ont été faites. L'image `gpu` y a été construite (5,4 Go, contre 1,7 Go pour `cpu`)
+> et contient bien les bibliothèques CUDA, mais aucune inférence n'a tourné sur GPU. À valider sur la machine cible avec
 > `python scripts/benchmark.py input.mp4 --users 10 --output-type video_embedded`. La page
 > d'administration affiche ensuite le rapport calcul / durée en continu sur l'usage réel.
 

@@ -37,10 +37,19 @@ if (-not (Test-Path "models\opus-mt-en-fr\model.bin")) {
     Write-Warning "Pas de traduction : dossier models\opus-mt-en-fr absent (voir README, scripts\convert_translation_model.py)."
 }
 
+# Lance une commande externe en silence et dit si elle a reussi. (Avec
+# ErrorActionPreference = Stop, sa sortie d'erreur interromprait le script.)
+function Test-Command([scriptblock]$Command) {
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = "SilentlyContinue"
+    try { & $Command *> $null; return $LASTEXITCODE -eq 0 }
+    catch { return $false }
+    finally { $ErrorActionPreference = $previous }
+}
+
 function Test-NvidiaGpu {
     if (-not (Get-Command nvidia-smi -ErrorAction SilentlyContinue)) { return $false }
-    & nvidia-smi --query-gpu=name --format=csv,noheader *> $null
-    return $LASTEXITCODE -eq 0
+    return Test-Command { nvidia-smi --query-gpu=name --format=csv,noheader }
 }
 
 if ($Device -eq "auto") {
@@ -50,8 +59,7 @@ if ($Device -eq "gpu") {
     if (-not (Test-NvidiaGpu)) {
         throw "-Device gpu : aucun GPU NVIDIA detecte (nvidia-smi). Installez le pilote NVIDIA ou lancez avec -Device cpu."
     }
-    & $python -c "import importlib.util as u, sys; sys.exit(0 if u.find_spec('nvidia.cudnn') and u.find_spec('nvidia.cublas') else 1)"
-    if ($LASTEXITCODE -ne 0) {
+    if (-not (Test-Command { & $python -c "import importlib.util as u, sys; sys.exit(0 if u.find_spec('nvidia.cudnn') and u.find_spec('nvidia.cublas') else 1)" })) {
         throw "-Device gpu : bibliotheques CUDA absentes du .venv. Lancez : .venv\Scripts\python -m pip install -r requirements-gpu.txt"
     }
 }
