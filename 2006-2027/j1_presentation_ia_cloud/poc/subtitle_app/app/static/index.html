@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Subtitle application</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+    button, select, input { font-size: 1rem; margin: .3rem 0; }
+    pre { background: #f4f4f4; padding: 1rem; white-space: pre-wrap; max-height: 300px; overflow: auto; }
+    #status { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Sous-titrage automatique</h1>
+
+  <h3>1. Fichier (.mp4 ou .wav)</h3>
+  <input type="file" id="file" accept=".mp4,.wav">
+  <button id="upload">Envoyer</button>
+
+  <div id="step2" hidden>
+    <h3>2. Résultat souhaité</h3>
+    <select id="format"></select>
+    <button id="process">Lancer le traitement</button>
+  </div>
+
+  <p id="status"></p>
+  <div id="result" hidden>
+    <a id="download">Télécharger</a>
+    <pre id="preview" hidden></pre>
+  </div>
+
+<script>
+const LABELS = {
+  video_embedded: "Vidéo avec sous-titres incrustés",
+  video_with_track: "Vidéo + piste de sous-titres (métadonnées)",
+  subtitles: "Sous-titres seuls (.srt)",
+  text: "Texte uniquement",
+};
+const $ = (id) => document.getElementById(id);
+let jobId = null;
+
+async function api(url, options) {
+  const res = await fetch(url, options);
+  if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
+  return res;
+}
+
+$("upload").onclick = async () => {
+  const file = $("file").files[0];
+  if (!file) return;
+  try {
+    const body = new FormData();
+    body.append("file", file);
+    const job = await (await api("/jobs", { method: "POST", body })).json();
+    jobId = job.id;
+    $("format").innerHTML = job.allowed_outputs
+      .map((o) => `<option value="${o}">${LABELS[o]}</option>`).join("");
+    $("step2").hidden = false;
+    $("status").textContent = "Fichier envoyé.";
+  } catch (e) { $("status").textContent = "Erreur : " + e.message; }
+};
+
+$("process").onclick = async () => {
+  try {
+    await api(`/jobs/${jobId}/process`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ output_format: $("format").value }),
+    });
+    $("result").hidden = true;
+    poll();
+  } catch (e) { $("status").textContent = "Erreur : " + e.message; }
+};
+
+async function poll() {
+  const job = await (await api(`/jobs/${jobId}`)).json();
+  $("status").textContent = "Statut : " + job.status + (job.error ? " (" + job.error + ")" : "");
+  if (job.status === "done") return showResult(job);
+  if (job.status !== "failed") setTimeout(poll, 2000);
+}
+
+async function showResult(job) {
+  $("download").href = `/jobs/${jobId}/result`;
+  $("result").hidden = false;
+  const textual = ["subtitles", "text"].includes(job.output_format);
+  $("preview").hidden = !textual;
+  if (textual) $("preview").textContent = await (await api(`/jobs/${jobId}/preview`)).text();
+}
+</script>
+</body>
+</html>
