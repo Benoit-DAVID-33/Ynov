@@ -32,8 +32,14 @@ function setProgress(id, percent, label) {
   show(box);
 }
 
+function toLogin() {
+  location.replace("/login.html");
+  return new Promise(() => {}); // the page is being replaced: stop the caller here
+}
+
 async function api(path, options) {
   const response = await fetch(`/api${path}`, options);
+  if (response.status === 401) return toLogin();
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     throw new Error(typeof body.detail === "string" ? body.detail : `Erreur ${response.status}`);
@@ -138,6 +144,7 @@ async function sendFile(file) {
       await sleep(Math.min(1000 * 2 ** failures, 15000));
       continue;
     }
+    if (answer.status === 401) return toLogin();
     if (answer.status === 200 || answer.status === 409) {
       // 409: the server already has other bytes than expected; it says where it stands.
       offset = answer.data.received_bytes;
@@ -435,6 +442,9 @@ function reset() {
 
 async function init() {
   try {
+    const me = await api("/auth/me");
+    $("username").textContent = me.username;
+    show($("account"));
     config = await api("/config");
   } catch (e) {
     return fail(`Service indisponible : ${e.message}`);
@@ -457,6 +467,10 @@ async function init() {
     handleFile(e.dataTransfer.files[0]);
   };
   $("start").onclick = startJob;
+  $("logout").onclick = async () => {
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    location.replace("/login.html");
+  };
   $("reset").onclick = reset;
   $("cancel").onclick = cancelJob;
   $("delete").onclick = deleteUpload;

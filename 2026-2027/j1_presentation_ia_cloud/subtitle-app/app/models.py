@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import JSON, ForeignKey, String, Text
+from sqlalchemy import JSON, BigInteger, CheckConstraint, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -14,7 +14,7 @@ _Json = JSON(none_as_null=True)
 
 
 def utcnow() -> datetime:
-    # Naive UTC: SQLite does not keep timezone information.
+    # Naive UTC: every timestamp of the schema is stored without timezone.
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
@@ -22,22 +22,51 @@ def new_id() -> str:
     return uuid.uuid4().hex
 
 
+class User(Base):
+    __tablename__ = "users"
+    __table_args__ = (CheckConstraint("role IN ('user', 'admin')", name="ck_users_role"),)
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=new_id)
+    # Lowercase, so that "Alice" and "alice" are the same account.
+    username: Mapped[str] = mapped_column(String(32), unique=True)
+    password_hash: Mapped[str] = mapped_column(String(255))
+    role: Mapped[str] = mapped_column(String(16), default="user")
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)
+    last_login_at: Mapped[datetime | None]
+    # A disabled account cannot log in and its sessions stop working.
+    disabled_at: Mapped[datetime | None]
+
+
+class AuthSession(Base):
+    """A login. Only the SHA-256 of the cookie token is kept: a database leak gives no session."""
+
+    __tablename__ = "auth_sessions"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(index=True)
+
+
 class Upload(Base):
+    """An input file. Its bytes are on disk at `path`; the database only holds the metadata."""
+
     __tablename__ = "uploads"
+    __table_args__ = (Index("ix_uploads_owner_id_created_at", "owner_id", "created_at"),)
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True, default=new_id)
     filename: Mapped[str] = mapped_column(String(255))
     kind: Mapped[str] = mapped_column(String(16))
     path: Mapped[str] = mapped_column(String(1024))
-    size_bytes: Mapped[int]
+    size_bytes: Mapped[int] = mapped_column(BigInteger)  # up to 2 GiB and more: over INTEGER
     duration_s: Mapped[float | None]
     created_at: Mapped[datetime] = mapped_column(default=utcnow)
-    # Anonymous browser identifier (cookie): scopes "my latest file".
-    owner_id: Mapped[str | None] = mapped_column(String(32), index=True)
+    # The account the file belongs to; its jobs and result files follow.
+    owner_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     # Set when the files were deleted by the retention policy; rows are kept
     # for the usage statistics.
     purged_at: Mapped[datetime | None]
-    # Set when the visitor asked to delete the file; the files go as soon as
+    # Set when the user asked to delete the file; the files go as soon as
     # no worker is using them any more.
     delete_requested_at: Mapped[datetime | None]
 
@@ -48,9 +77,9 @@ class UploadSession(Base):
     __tablename__ = "upload_sessions"
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True, default=new_id)
-    owner_id: Mapped[str] = mapped_column(String(32), index=True)
+    owner_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     filename: Mapped[str] = mapped_column(String(255))
-    size_bytes: Mapped[int]
+    size_bytes: Mapped[int] = mapped_column(BigInteger)
     created_at: Mapped[datetime] = mapped_column(default=utcnow)
 
 
@@ -58,7 +87,7 @@ class Job(Base):
     __tablename__ = "jobs"
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True, default=new_id)
-    upload_id: Mapped[str] = mapped_column(ForeignKey("uploads.id"), index=True)
+    upload_id: Mapped[str] = mapped_column(ForeignKey("uploads.id", ondelete="CASCADE"), index=True)
     output_type: Mapped[str] = mapped_column(String(32))
     model: Mapped[str] = mapped_column(String(64))
     status: Mapped[str] = mapped_column(String(16), default=JobStatus.QUEUED.value, index=True)

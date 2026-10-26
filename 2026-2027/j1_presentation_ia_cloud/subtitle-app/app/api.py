@@ -4,7 +4,6 @@ The admin console is a separate service, see app/admin.py.
 """
 
 import logging
-import re
 import threading
 from datetime import datetime
 from pathlib import Path
@@ -17,24 +16,33 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app import jobs, media, retention
+from app import auth, jobs, media, retention
+from app.auth import current_user, current_user_id
 from app.config import Settings, get_settings
 from app.db import get_session, init_db
 from app.domain import ALLOWED_OUTPUTS, EXTENSIONS, JobStatus, MediaKind, OutputType
 from app.logs import setup_logging
-from app.models import Job, Upload, UploadSession, new_id, utcnow
+from app.models import Job, Upload, UploadSession, User, new_id, utcnow
 from app.pipeline import delivered_language
 from app.transcription import registered_transcribers
 from app.translation import available_targets
 
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 _CHUNK = 1024 * 1024
-_CLIENT_COOKIE = "client_id"
-_CLIENT_ID = re.compile(r"[0-9a-f]{32}")
 # One chunk is appended at a time: the offset check and the write must not interleave.
 _append_lock = threading.Lock()
 
 log = logging.getLogger("api")
+
+
+class CredentialsIn(BaseModel):
+    username: str = Field(max_length=64)
+    password: str = Field(max_length=256)
+
+
+class UserOut(BaseModel):
+    username: str
+    role: str
 
 
 class UploadOut(BaseModel):
@@ -146,8 +154,7 @@ def job_fields(session: Session, job: Job) -> dict:
 
 
 def _is_owner(upload: Upload, owner_id: str) -> bool:
-    # Uploads made before visitors were identified have no owner: left open.
-    return upload.owner_id is None or upload.owner_id == owner_id
+    return upload.owner_id == owner_id
 
 
 def _own_upload(session: Session, upload_id: str, owner_id: str) -> Upload:
@@ -200,21 +207,11 @@ def _minutes(seconds: float) -> int:
     return int(seconds // 60)
 
 
-def client_id(request: Request, response: Response) -> str:
-    """Anonymous identifier of the browser, kept in a cookie.
-
-    There are no user accounts: the cookie is what ties files and results to
-    the browser (or API client) that uploaded them. Whoever holds it can read
-    them, nobody else can.
-    """
-    value = request.cookies.get(_CLIENT_COOKIE, "")
-    if not _CLIENT_ID.fullmatch(value):
-        value = new_id()
-        response.set_cookie(
-            _CLIENT_COOKIE, value, max_age=365 * 24 * 3600, httponly=True, samesite="lax",
-            secure=request.url.scheme == "https",
-        )
-    return value
+def _set_session_cookie(response: Response, request: Request, token: str, settings: Settings) -> None:
+    response.set_cookie(
+        auth.USER_COOKIE, token, max_age=int(settings.session_days * 24 * 3600), httponly=True,
+        samesite="lax", secure=settings.cookie_secure or request.url.scheme == "https",
+    )
 
 
 def _check_extension(filename: str) -> tuple[str, MediaKind]:
@@ -315,10 +312,74 @@ def queue(session: Session = Depends(get_session), settings: Settings = Depends(
     return _queue_state(session, settings)
 
 
+@router.post("/auth/register", response_model=UserOut, status_code=201)
+def register(
+    body: CredentialsIn,
+    request: Request,
+    response: Response,
+    session: Session = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+):
+    """Open to everyone. The new account is logged in at once."""
+    address = auth.client_address(request)
+    if auth.registration_limiter.blocked(address):
+        raise HTTPException(429, "Trop de créations de compte depuis cette adresse : réessayez plus tard")
+    auth.registration_limiter.record(address)
+    try:
+        user = auth.create_user(session, body.username, body.password)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    except auth.UsernameTaken as exc:
+        raise HTTPException(409, "Ce nom d'utilisateur est déjà pris") from exc
+    token, _ = auth.open_session(session, user, settings.session_days * 24 * 3600)
+    session.commit()
+    _set_session_cookie(response, request, token, settings)
+    log.info("account '%s' created", user.username)
+    return user
+
+
+@router.post("/auth/login", response_model=UserOut)
+def login(
+    body: CredentialsIn,
+    request: Request,
+    response: Response,
+    session: Session = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+):
+    address = auth.client_address(request)
+    if auth.login_limiter.blocked(address):
+        raise HTTPException(429, "Trop de tentatives : réessayez dans une minute")
+    user = auth.authenticate(session, body.username, body.password)
+    if user is None:
+        auth.login_limiter.record(address)
+        log.warning("failed login from %s", address)
+        raise HTTPException(401, "Nom d'utilisateur ou mot de passe incorrect")
+    auth.login_limiter.clear(address)
+    token, _ = auth.open_session(session, user, settings.session_days * 24 * 3600)
+    session.commit()
+    _set_session_cookie(response, request, token, settings)
+    return user
+
+
+@router.post("/auth/logout")
+def logout(
+    request: Request, response: Response, session: Session = Depends(get_session)
+) -> dict:
+    auth.close_session(session, request.cookies.get(auth.USER_COOKIE, ""))
+    session.commit()
+    response.delete_cookie(auth.USER_COOKIE)
+    return {"status": "ok"}
+
+
+@router.get("/auth/me", response_model=UserOut)
+def me(user: User = Depends(current_user)):
+    return user
+
+
 @router.post("/uploads", response_model=UploadOut, status_code=201)
 def create_upload(
     file: UploadFile,
-    owner_id: str = Depends(client_id),
+    owner_id: str = Depends(current_user_id),
     session: Session = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ):
@@ -347,7 +408,7 @@ def create_upload(
 @router.post("/uploads/sessions", response_model=UploadSessionOut, status_code=201)
 def create_upload_session(
     body: UploadSessionIn,
-    owner_id: str = Depends(client_id),
+    owner_id: str = Depends(current_user_id),
     session: Session = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ):
@@ -373,7 +434,7 @@ def create_upload_session(
 @router.get("/uploads/sessions/{session_id}", response_model=UploadSessionOut)
 def get_upload_session(
     session_id: str,
-    owner_id: str = Depends(client_id),
+    owner_id: str = Depends(current_user_id),
     session: Session = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ):
@@ -386,7 +447,7 @@ def append_chunk(
     session_id: str,
     chunk: UploadFile,
     offset: int = Form(),
-    owner_id: str = Depends(client_id),
+    owner_id: str = Depends(current_user_id),
     session: Session = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ):
@@ -415,7 +476,7 @@ def append_chunk(
 @router.post("/uploads/sessions/{session_id}/complete", response_model=UploadOut, status_code=201)
 def complete_upload_session(
     session_id: str,
-    owner_id: str = Depends(client_id),
+    owner_id: str = Depends(current_user_id),
     session: Session = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ):
@@ -437,7 +498,7 @@ def complete_upload_session(
 
 
 @router.get("/uploads/last")
-def last_upload(owner_id: str = Depends(client_id), session: Session = Depends(get_session)) -> dict:
+def last_upload(owner_id: str = Depends(current_user_id), session: Session = Depends(get_session)) -> dict:
     """The visitor's latest file still on the server, with its jobs (newest first)."""
     upload = session.scalar(
         select(Upload)
@@ -463,7 +524,7 @@ def last_upload(owner_id: str = Depends(client_id), session: Session = Depends(g
 @router.post("/jobs", response_model=JobOut, status_code=201)
 def create_job(
     body: JobIn,
-    owner_id: str = Depends(client_id),
+    owner_id: str = Depends(current_user_id),
     session: Session = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ):
@@ -504,14 +565,14 @@ def create_job(
 
 @router.get("/jobs/{job_id}", response_model=JobOut)
 def get_job(
-    job_id: str, owner_id: str = Depends(client_id), session: Session = Depends(get_session)
+    job_id: str, owner_id: str = Depends(current_user_id), session: Session = Depends(get_session)
 ):
     return job_fields(session, _own_job(session, job_id, owner_id))
 
 
 @router.get("/jobs/{job_id}/transcript", response_model=TranscriptOut)
 def get_transcript(
-    job_id: str, owner_id: str = Depends(client_id), session: Session = Depends(get_session)
+    job_id: str, owner_id: str = Depends(current_user_id), session: Session = Depends(get_session)
 ):
     """Machine-readable result, e.g. to feed a translation service."""
     job = _own_done_job(session, job_id, owner_id)
@@ -528,7 +589,7 @@ def get_transcript(
 def correct_segments(
     job_id: str,
     body: SegmentsIn,
-    owner_id: str = Depends(client_id),
+    owner_id: str = Depends(current_user_id),
     session: Session = Depends(get_session),
 ):
     """Replace the text of the subtitles and rebuild the result files from it.
@@ -554,7 +615,7 @@ def correct_segments(
 
 @router.post("/jobs/{job_id}/cancel", response_model=JobOut)
 def cancel_job(
-    job_id: str, owner_id: str = Depends(client_id), session: Session = Depends(get_session)
+    job_id: str, owner_id: str = Depends(current_user_id), session: Session = Depends(get_session)
 ):
     job = _own_job(session, job_id, owner_id)
     if not jobs.cancel(session, job.id):
@@ -568,7 +629,7 @@ def cancel_job(
 @router.delete("/uploads/{upload_id}", status_code=204)
 def delete_upload(
     upload_id: str,
-    owner_id: str = Depends(client_id),
+    owner_id: str = Depends(current_user_id),
     session: Session = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> None:
@@ -586,7 +647,7 @@ def delete_upload(
 @router.get("/jobs/{job_id}/download")
 def download(
     job_id: str,
-    owner_id: str = Depends(client_id),
+    owner_id: str = Depends(current_user_id),
     session: Session = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ):
@@ -601,7 +662,7 @@ def download(
 def get_file(
     job_id: str,
     name: str,
-    owner_id: str = Depends(client_id),
+    owner_id: str = Depends(current_user_id),
     session: Session = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ):
@@ -618,8 +679,9 @@ def create_app() -> FastAPI:
     settings.storage_dir.mkdir(parents=True, exist_ok=True)
     setup_logging("api", settings)
     init_db(settings.database_url)
+    auth.registration_limiter.limit = settings.max_registrations_per_hour
 
-    app = FastAPI(title="Subtitle application", version="1.2.0")
+    app = FastAPI(title="Subtitle application", version="1.3.0")
     app.include_router(router)
     app.mount("/shared", StaticFiles(directory=WEB_DIR / "shared"), name="shared")
     app.mount("/", StaticFiles(directory=WEB_DIR / "user", html=True), name="web")

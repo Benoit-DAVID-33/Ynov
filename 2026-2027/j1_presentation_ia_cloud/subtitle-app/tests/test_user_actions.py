@@ -1,7 +1,5 @@
 from pathlib import Path
 
-from fastapi.testclient import TestClient
-
 from app import jobs, media, retention, worker
 from app.db import session_scope
 from app.domain import Segment, Transcription
@@ -126,14 +124,14 @@ def test_corrections_apply_to_the_translated_text_and_carry_over(client, submit,
     assert client.get(f"/api/jobs/{original['id']}/download").text.startswith("Hello world.")
 
 
-def test_correction_is_refused_when_invalid_or_not_allowed(client, submit, run_worker):
+def test_correction_is_refused_when_invalid_or_not_allowed(client, stranger, submit, run_worker):
     job = submit()
     url = f"/api/jobs/{job['id']}/segments"
     assert client.put(url, json={"texts": ["a", "b"]}).status_code == 409  # not finished
     run_worker()
     assert client.put(url, json={"texts": ["only one"]}).status_code == 422
     assert client.put(url, json={"texts": ["x" * 501, "b"]}).status_code == 422
-    assert TestClient(client.app).put(url, json={"texts": ["a", "b"]}).status_code == 404
+    assert stranger.put(url, json={"texts": ["a", "b"]}).status_code == 404
 
 
 # --- cancel -----------------------------------------------------------------
@@ -165,14 +163,14 @@ def test_running_job_stops_at_its_next_progress_report(client, submit, settings,
     assert not (settings.results_dir / job["id"]).exists()
 
 
-def test_only_the_owner_can_cancel(client, submit):
+def test_only_the_owner_can_cancel(client, stranger, submit):
     job = submit()
-    assert TestClient(client.app).post(f"/api/jobs/{job['id']}/cancel").status_code == 404
+    assert stranger.post(f"/api/jobs/{job['id']}/cancel").status_code == 404
 
 
 def test_cancelled_jobs_are_counted_apart(client, admin_client, submit):
     client.post(f"/api/jobs/{submit()['id']}/cancel")
-    admin_client.post("/api/login", json={"password": "secret"})
+    admin_client.post("/api/login", json={"username": "admin", "password": "admin-secret"})
     stats = admin_client.get("/api/overview").json()["stats"]
     assert stats["cancelled"]["total"] == 1
     assert stats["unfinished"]["total"] == stats["failed"]["total"] == 0
@@ -180,7 +178,7 @@ def test_cancelled_jobs_are_counted_apart(client, admin_client, submit):
 
 # --- delete -----------------------------------------------------------------
 
-def test_owner_deletes_their_file_and_results_at_once(client, submit, run_worker, settings):
+def test_owner_deletes_their_file_and_results_at_once(client, stranger, submit, run_worker, settings):
     job = submit("clip.mp4", "subtitles")
     run_worker()
     waiting = client.post(
@@ -189,7 +187,7 @@ def test_owner_deletes_their_file_and_results_at_once(client, submit, run_worker
     with session_scope() as session:
         path = Path(session.get(Upload, job["upload_id"]).path)
 
-    assert TestClient(client.app).delete(f"/api/uploads/{job['upload_id']}").status_code == 404
+    assert stranger.delete(f"/api/uploads/{job['upload_id']}").status_code == 404
     assert path.exists()
     assert client.delete(f"/api/uploads/{job['upload_id']}").status_code == 204
 

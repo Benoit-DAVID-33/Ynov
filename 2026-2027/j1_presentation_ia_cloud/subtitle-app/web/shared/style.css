@@ -98,7 +98,7 @@ input[type=range] { accent-color: var(--accent); }
 .choice input { margin-right: 6px; }
 
 .inline { display: flex; align-items: center; gap: 10px; margin: 16px 0; }
-select, input[type=password] {
+select, input[type=text], input[type=password] {
   flex: 1;
   padding: 8px;
   border: 1px solid var(--border);
@@ -161,6 +161,9 @@ pre {
 .tile span { color: var(--muted); font-size: 0.9rem; }
 
 .narrow { max-width: 420px; margin-left: auto; margin-right: auto; }
+.account { display: flex; align-items: center; gap: 10px; }
+.form-grid { display: grid; gap: 12px; }
+.form-grid label { display: grid; gap: 4px; }
 .services { display: flex; flex-wrap: wrap; gap: 8px; }
 .pill {
   padding: 4px 12px;

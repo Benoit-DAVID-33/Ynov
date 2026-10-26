@@ -70,8 +70,11 @@ seul bloc (horodatages perdus à la fusion des fenêtres) et mettait 95 s sur CP
 `small.en`. faster-whisper rend 52 sous-titres de 6,4 s au plus en 13 s, sans dépendre de
 PyTorch, sur CPU (int8) comme sur GPU (float16).
 
-**Deux modes de déploiement, même code.** Docker Compose avec PostgreSQL, ou lancement direct
-avec SQLite (`scripts/run_local.ps1`). Seule la configuration change.
+**Un seul moteur de base de données.** PostgreSQL, sous Docker comme en développement
+(`docker compose up -d db` suffit à l'établi). Les deux déploiements ne diffèrent que par la
+configuration. SQLite a été abandonné : le schéma comporte des comptes, des contraintes de
+clé étrangère avec suppression en cascade, des verrous consultatifs pour les migrations
+simultanées, et les tests doivent tourner sur le moteur de production.
 
 **CPU ou GPU, choisi au lancement.** L'équipe développe sur deux machines, l'une sans GPU,
 l'autre avec un GPU NVIDIA. Un seul réglage, `DEVICE`, posé par les scripts de lancement,
@@ -172,7 +175,7 @@ attente ou en cours (les traitements en cours ne comptent que pour ce qu'il leur
 la sienne, dépasse `MAX_PENDING_MEDIA_S` (4 h par défaut). Une file vide accepte toujours, pour
 qu'un fichier seul ne soit jamais refusé. La limite est exprimée en durée de média et non en
 nombre de traitements, parce que c'est la durée qui fait la charge. S'y ajoute un plafond de
-4 traitements actifs par visiteur. Le scénario de référence (10 utilisateurs, 2 min 29 chacun,
+4 traitements actifs par utilisateur. Le scénario de référence (10 utilisateurs, 2 min 29 chacun,
 soit 25 min de média) reste très en dessous du plafond.
 
 Une règle plus stricte, refuser dès que la promesse « plus rapide que la durée du média » ne
@@ -184,18 +187,57 @@ une session d'envoi. Le serveur n'ajoute un morceau que s'il commence exactement
 est, sinon il répond avec sa position réelle : un morceau perdu ou envoyé deux fois ne peut pas
 corrompre le fichier. L'état est sur disque et en base, donc il survit à un redémarrage.
 Vérifié avec un fichier de 185 Mo : application tuée à mi-envoi, relancée automatiquement,
-envoi terminé et fichier reçu identique à l'original (empreinte SHA-256). Un visiteur n'a
+envoi terminé et fichier reçu identique à l'original (empreinte SHA-256). Un utilisateur n'a
 qu'un envoi en cours à la fois, et un envoi abandonné est effacé après 24 h.
 
 **Purge automatique.** Le worker passe toutes les 10 s et supprime les fichiers (dépôt et
-résultats) de tout dépôt qui n'est plus le dernier de son visiteur, ou qui a plus de
+résultats) de tout dépôt qui n'est plus le dernier de son propriétaire, ou qui a plus de
 `RETENTION_DAYS` jours. Un fichier dont un traitement est en attente ou en cours n'est jamais
 supprimé. Les lignes en base sont conservées : l'exigence « contenu des réponses » et les
 compteurs de l'administrateur ne dépendent pas des fichiers.
 
-Sans comptes utilisateurs, « le dernier fichier de chacun » repose sur un cookie anonyme. Une
-règle globale (ne garder que le dernier fichier du serveur) aurait supprimé les résultats des
-autres utilisateurs à chaque dépôt, ce qui est incompatible avec 10 utilisateurs en parallèle.
+« Le dernier fichier de chacun » repose sur le compte du dépôt. Une règle globale (ne garder
+que le dernier fichier du serveur) aurait supprimé les résultats des autres utilisateurs à
+chaque dépôt, ce qui est incompatible avec 10 utilisateurs en parallèle.
+
+## Comptes et base de données
+
+**Schéma.** `users` (nom en minuscules, unique ; mot de passe haché ; rôle `user` ou `admin` ;
+`disabled_at`), `auth_sessions` (une ligne par connexion), `uploads` et `upload_sessions`
+(rattachés à un compte par clé étrangère), `jobs` (rattachés à un dépôt), `workers`. Les
+suppressions se propagent en cascade : compte, puis dépôts, puis traitements.
+
+**Les médias ne sont pas dans la base.** Les fichiers (jusqu'à 2 Go) restent sur le disque :
+mettre des vidéos dans PostgreSQL gonflerait la base, ralentirait sauvegardes et reprises
+d'envoi, et empêcherait de servir un fichier en flux. La base fait le lien : propriétaire,
+chemin, taille, durée, liste des fichiers produits. La taille est un `BIGINT` : un fichier de
+plus de 2 Gio dépasse un entier de 32 bits.
+
+**Mots de passe.** Hachés avec argon2id (paramètres par défaut d'`argon2-cffi`), jamais
+stockés ni journalisés ; longueur bornée à 128 caractères pour qu'un mot de passe démesuré ne
+serve pas à saturer le processeur. Un nom inconnu et un mauvais mot de passe prennent le même
+temps et reçoivent la même réponse.
+
+**Sessions.** Jeton aléatoire de 256 bits dans un cookie HttpOnly ; la base ne garde que son
+empreinte SHA-256, donc une fuite de la base ne donne aucune session utilisable. Chaque
+connexion peut être révoquée (déconnexion, changement de mot de passe, désactivation du
+compte). Le worker purge les sessions expirées.
+
+**Administrateur.** Un compte comme les autres, de rôle `admin`, avec son propre cookie
+(`admin_session`) : une session d'utilisateur n'ouvre pas la console. Conséquence assumée : la
+connexion à la console dépend de la base. Un administrateur déjà connecté garde les journaux
+et l'état des services pendant une panne de la base, grâce à un cache des sessions déjà
+validées ; c'est là qu'il en a le plus besoin.
+
+**Migrations.** Alembic, appliquées au démarrage de chaque service sous un verrou consultatif
+PostgreSQL (les trois services démarrent ensemble). Un test compare le schéma produit par les
+migrations à celui des modèles. La migration `0001` remplace les tables d'avant les comptes :
+leurs dépôts, liés à un cookie anonyme, n'avaient pas de propriétaire.
+
+**Inscription ouverte.** Tout le monde peut créer un compte, donc le nombre de créations est
+limité par adresse IP (`MAX_REGISTRATIONS_PER_HOUR`) et les échecs de connexion sont comptés
+(5 par minute et par adresse). Ces compteurs sont en mémoire de chaque processus : ils freinent
+la devinette de mots de passe sans remplacer un pare-feu ou un reverse proxy.
 
 ## Corrections apportées au prototype
 
@@ -212,24 +254,26 @@ autres utilisateurs à chaque dépôt, ce qui est incompatible avec 10 utilisate
 
 ## Sécurité et limites connues
 
-- La console d'administration est un service séparé, protégé par mot de passe (`ADMIN_PASSWORD`),
-  avec blocage d'une minute après 5 échecs. Les sessions sont gardées en mémoire : un
-  redémarrage de la console demande de se reconnecter. À publier en HTTPS uniquement.
-- Les utilisateurs ne sont pas authentifiés (non demandé). Un fichier et ses résultats sont
-  liés à un cookie anonyme (`client_id`, aléatoire sur 128 bits, HttpOnly, marqué Secure en
-  HTTPS) : sans lui, toute lecture ou action répond 404, comme pour un identifiant inconnu.
-  Ce n'est pas une authentification : qui efface ses cookies perd l'accès à ses résultats, et
-  qui obtiendrait le cookie d'un autre y accéderait. À exposer en HTTPS.
+- La console d'administration est un service séparé, réservé aux comptes de rôle `admin`, avec
+  blocage d'une minute après 5 échecs et sessions de 8 heures enregistrées en base. À publier
+  en HTTPS uniquement.
+- Les utilisateurs s'authentifient par un compte (inscription ouverte). Un fichier et ses
+  résultats sont liés à ce compte : pour tout autre compte, toute lecture ou action répond 404,
+  comme pour un identifiant inconnu ; sans connexion, 401. Le cookie de session est HttpOnly,
+  SameSite Lax et marqué Secure en HTTPS (ou si `COOKIE_SECURE=true` derrière un proxy). Pas de
+  récupération de mot de passe par courriel : l'administrateur le réinitialise
+  (`python -m app.users passwd`). À exposer en HTTPS.
 - Extensions limitées à `.mp4` / `.wav`, taille plafonnée (`MAX_UPLOAD_MB`), noms de fichiers
   jamais utilisés comme chemins.
-- Les fichiers déposés et produits ne sont pas purgés automatiquement : prévoir une rétention
-  selon le volume d'usage.
+- Supprimer un compte directement en base supprime ses lignes en cascade mais pas ses fichiers
+  sur le disque ; la purge automatique ne les retrouve plus (elle part des lignes en base).
 - La traduction fournie va de l'anglais vers le français uniquement.
 - La correction porte sur le texte, pas sur les horaires des sous-titres.
 - Traduction automatique généraliste : à relire avant diffusion (noms propres, expressions).
 - Les sous-titres incrustés sont figés dans l'image : leur style se choisit avant le
   traitement. Le réglage en direct dans le lecteur ne concerne que la piste de sous-titres.
-- Mise à niveau de la base limitée à l'ajout de colonnes ; au-delà, prévoir Alembic.
+- Les migrations sont écrites à la main (Alembic) et relues : un test signale tout écart avec les
+  modèles.
 
 ## Performances et dimensionnement
 

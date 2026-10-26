@@ -1,5 +1,7 @@
-# Start with scripts/run_docker.ps1 (Windows) or scripts/run_docker.sh (Linux),
-# which pick the CPU or GPU variant. By hand:
+# Works as is, with no .env: `docker compose up -d --build` builds the image and starts
+# the database, the application, the admin console and the worker. Start with
+# scripts/run_docker.ps1 (Windows) or scripts/run_docker.sh (Linux) to pick the CPU or
+# GPU variant. By hand:
 #   CPU : docker compose up -d --build
 #   GPU : DEVICE=gpu docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d --build
 
@@ -14,7 +16,10 @@ x-app: &app
   restart: unless-stopped
 
 x-app-env: &app-env
-  DATABASE_URL: postgresql+psycopg://subtitle:${POSTGRES_PASSWORD:?définir POSTGRES_PASSWORD dans .env}@db:5432/subtitle
+  # The database is only reachable from the compose network and from this machine
+  # (127.0.0.1), so the default password is fine for a trial; set POSTGRES_PASSWORD
+  # in .env before the first start of a server (the volume keeps the first one).
+  DATABASE_URL: postgresql+psycopg://subtitle:${POSTGRES_PASSWORD:-subtitle}@db:5432/subtitle
   # cpu or gpu: also selects the default model and batch size (see .env.example).
   DEVICE: ${DEVICE:-cpu}
   ENABLED_MODELS: ${ENABLED_MODELS:-whisper-medium.en,whisper-small.en,whisper-medium,whisper-small}
@@ -23,6 +28,9 @@ x-app-env: &app-env
   MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-2048}
   MAX_DURATION_S: ${MAX_DURATION_S:-7200}
   RETENTION_DAYS: ${RETENTION_DAYS:-7}
+  SESSION_DAYS: ${SESSION_DAYS:-30}
+  COOKIE_SECURE: ${COOKIE_SECURE:-false}
+  MAX_REGISTRATIONS_PER_HOUR: ${MAX_REGISTRATIONS_PER_HOUR:-20}
   MAX_PENDING_MEDIA_S: ${MAX_PENDING_MEDIA_S:-14400}
   MAX_PENDING_JOBS_PER_VISITOR: ${MAX_PENDING_JOBS_PER_VISITOR:-4}
   BURN_PRESET: ${BURN_PRESET:-superfast}
@@ -33,8 +41,12 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: subtitle
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-subtitle}
       POSTGRES_DB: subtitle
+    # Reachable from this machine only (development, tests, psql); the services use the
+    # internal network.
+    ports:
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
     volumes:
       - db:/var/lib/postgresql/data
     healthcheck:
@@ -62,15 +74,20 @@ services:
       timeout: 3s
       retries: 6
 
-  # Admin console: its own service and port, so it stays reachable (logs,
-  # service status) when the application, the workers or the database are down.
-  # It deliberately depends on nothing.
+  # Admin console: its own service and port, so it stays reachable (logs, service
+  # status) when the application or the workers are down. It waits for the database only
+  # to start (to create the first administrator); a later outage is handled at runtime.
   admin:
     <<: *app
     command: ["uvicorn", "app.admin:create_app", "--factory", "--host", "0.0.0.0", "--port", "8001", "--no-access-log"]
+    depends_on:
+      db:
+        condition: service_healthy
     environment:
       <<: *app-env
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?définir ADMIN_PASSWORD dans .env}
+      # Used once, to create the first administrator account when none exists yet.
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       API_URL: http://api:8000
     ports:
       - "${ADMIN_PORT:-8001}:8001"

@@ -6,7 +6,6 @@ the logs and the service status are needed most.
 """
 
 import logging
-import secrets
 import shutil
 import time
 import urllib.request
@@ -15,9 +14,11 @@ from pathlib import Path
 
 from fastapi import APIRouter, Cookie, Depends, FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 
+from app import auth
 from app.api import WEB_DIR, job_fields
 from app.config import Settings, get_settings
 from app.db import init_db, session_scope
@@ -30,24 +31,18 @@ log = logging.getLogger("admin")
 
 _COOKIE = "admin_session"
 _SESSION_S = 8 * 3600
-_MAX_FAILURES = 5
-_LOCKOUT_S = 60
 _LOG_TAIL_BYTES = 256 * 1024
 
-# In memory on purpose: nothing to store, and a restart simply asks to log in again.
-_sessions: dict[str, float] = {}
-_failures: dict[str, tuple[int, float]] = {}  # client -> (count, locked until)
+# Sessions are in the database (table auth_sessions). Those validated here are also
+# remembered in memory, so that an administrator already logged in keeps the logs and
+# the service status during a database outage, which is when they are needed most.
+_known_sessions: dict[str, float] = {}  # token -> expiry
 _db_ready = False
 
 
 class LoginIn(BaseModel):
-    password: str
-
-
-def require_session(admin_session: str = Cookie(default="")) -> None:
-    if _sessions.get(admin_session, 0) < time.time():
-        _sessions.pop(admin_session, None)
-        raise HTTPException(401, "Connexion requise")
+    username: str = Field(max_length=64)
+    password: str = Field(max_length=256)
 
 
 def _database_available(settings: Settings) -> bool:
@@ -56,10 +51,33 @@ def _database_available(settings: Settings) -> bool:
     if not _db_ready:
         try:
             init_db(settings.database_url)
+            with session_scope() as session:
+                auth.ensure_admin(session, settings)
             _db_ready = True
         except Exception:
             log.warning("database unavailable", exc_info=True)
     return _db_ready
+
+
+def require_session(
+    admin_session: str = Cookie(default=""), settings: Settings = Depends(get_settings)
+) -> None:
+    now = time.time()
+    if _database_available(settings):
+        try:
+            with session_scope() as session:
+                user = auth.user_for_token(session, admin_session, auth.ROLE_ADMIN)
+        except SQLAlchemyError:
+            log.warning("session check: database error", exc_info=True)
+        else:
+            if user is None:
+                _known_sessions.pop(admin_session, None)
+                raise HTTPException(401, "Connexion requise")
+            _known_sessions.setdefault(admin_session, now + _SESSION_S)
+            return
+    if _known_sessions.get(admin_session, 0) > now:
+        return
+    raise HTTPException(401, "Connexion requise")
 
 
 def _api_status(settings: Settings) -> dict:
@@ -80,6 +98,7 @@ def _log_path(settings: Settings, name: str) -> Path:
 
 public = APIRouter(prefix="/api")
 private = APIRouter(prefix="/api", dependencies=[Depends(require_session)])
+_login_limiter = auth.AttemptLimiter(limit=5, window_s=60)
 
 
 @public.post("/login")
@@ -87,29 +106,41 @@ def login(
     body: LoginIn, request: Request, response: Response,
     settings: Settings = Depends(get_settings),
 ) -> dict:
-    if not settings.admin_password:
-        raise HTTPException(503, "ADMIN_PASSWORD n'est pas configuré sur le serveur")
-    client = request.client.host if request.client else "?"
-    count, locked_until = _failures.get(client, (0, 0.0))
-    if locked_until > time.time():
+    client = auth.client_address(request)
+    if _login_limiter.blocked(client):
         raise HTTPException(429, "Trop de tentatives : réessayez dans une minute")
-    if not secrets.compare_digest(body.password.encode(), settings.admin_password.encode()):
-        count += 1
-        _failures[client] = (count, time.time() + _LOCKOUT_S if count >= _MAX_FAILURES else 0.0)
+    if not _database_available(settings):
+        raise HTTPException(503, "Base de données indisponible : connexion impossible")
+    try:
+        with session_scope() as session:
+            user = auth.authenticate(session, body.username, body.password, role=auth.ROLE_ADMIN)
+            token = auth.open_session(session, user, _SESSION_S)[0] if user else None
+    except SQLAlchemyError as exc:
+        log.warning("login: database error", exc_info=True)
+        raise HTTPException(503, "Base de données indisponible : connexion impossible") from exc
+    if token is None:
+        _login_limiter.record(client)
         log.warning("failed admin login from %s", client)
-        raise HTTPException(401, "Mot de passe incorrect")
+        raise HTTPException(401, "Nom d'utilisateur ou mot de passe incorrect")
 
-    _failures.pop(client, None)
-    token = secrets.token_urlsafe(32)
-    _sessions[token] = time.time() + _SESSION_S
-    response.set_cookie(_COOKIE, token, max_age=_SESSION_S, httponly=True, samesite="strict")
-    log.info("admin logged in from %s", client)
+    _login_limiter.clear(client)
+    _known_sessions[token] = time.time() + _SESSION_S
+    response.set_cookie(
+        _COOKIE, token, max_age=_SESSION_S, httponly=True, samesite="strict",
+        secure=settings.cookie_secure or request.url.scheme == "https",
+    )
+    log.info("admin '%s' logged in from %s", user.username, client)
     return {"status": "ok"}
 
 
 @private.post("/logout")
 def logout(response: Response, admin_session: str = Cookie(default="")) -> dict:
-    _sessions.pop(admin_session, None)
+    _known_sessions.pop(admin_session, None)
+    try:
+        with session_scope() as session:
+            auth.close_session(session, admin_session)
+    except SQLAlchemyError:
+        log.warning("logout: database error", exc_info=True)
     response.delete_cookie(_COOKIE)
     return {"status": "ok"}
 
@@ -187,6 +218,9 @@ def create_app() -> FastAPI:
     settings = get_settings()
     settings.storage_dir.mkdir(parents=True, exist_ok=True)
     setup_logging("admin", settings)
+    # Try now, so that the first administrator exists (and a generated password is printed)
+    # as soon as the console starts; if the database is not up yet, later requests retry.
+    _database_available(settings)
 
     app = FastAPI(title="Subtitle application - admin", docs_url=None, redoc_url=None,
                   openapi_url=None)

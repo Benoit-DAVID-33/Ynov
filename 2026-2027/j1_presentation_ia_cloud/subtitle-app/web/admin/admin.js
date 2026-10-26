@@ -192,7 +192,7 @@ $("login").onsubmit = async (e) => {
     await call("/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: $("password").value }),
+      body: JSON.stringify({ username: $("username").value, password: $("password").value }),
     });
     $("password").value = "";
     refresh();

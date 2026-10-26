@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 import pytest
-from fastapi.testclient import TestClient
 
 from app import jobs, media, retention
 from app.db import session_scope
@@ -10,20 +9,14 @@ from app.models import Upload, UploadSession, utcnow
 CHUNK = 1024  # bytes sent per request in these tests
 
 
-@pytest.fixture
-def stranger(client):
-    """Another visitor of the same application (its own cookie)."""
-    return TestClient(client.app)
-
-
 def _set_duration(job, seconds):
     with session_scope() as session:
         session.get(Upload, job["upload_id"]).duration_s = seconds
 
 
-# --- results are private to the visitor who uploaded ------------------------
+# --- results are private to the user who uploaded ---------------------------
 
-def test_another_visitor_cannot_read_or_use_someone_elses_work(client, stranger, submit, run_worker):
+def test_another_user_cannot_read_or_use_someone_elses_work(client, stranger, submit, run_worker):
     job = submit("clip.mp4", "video_subtitles")
     run_worker()
     base = f"/api/jobs/{job['id']}"
@@ -36,19 +29,13 @@ def test_another_visitor_cannot_read_or_use_someone_elses_work(client, stranger,
     assert client.post("/api/jobs", json=body).status_code == 201
 
 
-def test_visitor_without_cookie_is_a_stranger(client, submit, run_worker):
+def test_logged_out_visitor_gets_nothing(client, submit, run_worker):
     job = submit()
     run_worker()
     client.cookies.clear()
-    assert client.get(f"/api/jobs/{job['id']}").status_code == 404
-
-
-def test_uploads_made_before_ownership_existed_stay_readable(client, stranger, submit, run_worker):
-    job = submit()
-    run_worker()
-    with session_scope() as session:
-        session.get(Upload, job["upload_id"]).owner_id = None
-    assert stranger.get(f"/api/jobs/{job['id']}/download").status_code == 200
+    assert client.get(f"/api/jobs/{job['id']}").status_code == 401
+    assert client.get("/api/uploads/last").status_code == 401
+    assert client.post("/api/uploads", files={"file": ("a.mp4", b"data")}).status_code == 401
 
 
 # --- queue admission --------------------------------------------------------

@@ -8,7 +8,7 @@ import socket
 import threading
 import time
 
-from app import jobs, pipeline, retention
+from app import auth, jobs, pipeline, retention
 from app.config import Settings, get_settings
 from app.db import init_db, session_scope
 from app.device import compute_type, resolve_device
@@ -188,6 +188,7 @@ def main() -> None:
                 jobs.worker_heartbeat(session, worker_id, device)
                 recovered = jobs.requeue_stale(session, settings.stale_after_s, settings.max_attempts)
                 retention.purge(session, settings)
+                auth.purge_expired_sessions(session)
             if recovered:
                 log.warning("recovered %d interrupted job(s)", recovered)
         except Exception:
