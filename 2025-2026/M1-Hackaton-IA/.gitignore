@@ -1,0 +1,8 @@
+datasets/dataset_v0.json
+.DS_Store
+
+# Ajouts équipe (reprise du projet)
+__pycache__/
+*.pyc
+.venv/
+workspace/
