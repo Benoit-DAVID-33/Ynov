@@ -1,10 +1,9 @@
 import fal_client
 import os
 
-# ---------------------------------------------------------
-# REMPLACE CECI PAR TA VRAIE CLÉ (ne partage pas ce code sur internet après)
-os.environ["FAL_KEY"] = "a99102f5-dff2-4133-a614-0cf7dece192a:689cae7db1be6fa5b45f9fbdd8283c74"
-# ---------------------------------------------------------
+# La clé doit être définie dans la variable d'environnement FAL_KEY (jamais dans le code).
+if "FAL_KEY" not in os.environ:
+    raise SystemExit("Variable d'environnement FAL_KEY manquante.")
 
 def on_queue_update(update):
     if isinstance(update, fal_client.InProgress):
