@@ -1,0 +1,9 @@
+*
+!app
+!web
+!requirements.txt
+!requirements-ml.txt
+!requirements-gpu.txt
+!requirements-convert.txt
+!scripts/convert_translation_model.py
+**/__pycache__

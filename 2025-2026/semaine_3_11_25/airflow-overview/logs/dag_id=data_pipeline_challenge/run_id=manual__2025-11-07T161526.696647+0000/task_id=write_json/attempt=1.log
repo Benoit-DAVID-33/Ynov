@@ -1,0 +1,54 @@
+[2025-11-07T16:15:36.727+0000] {local_task_job_runner.py:120} INFO - ::group::Pre task execution logs
+[2025-11-07T16:15:36.900+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: data_pipeline_challenge.write_json manual__2025-11-07T16:15:26.696647+00:00 [queued]>
+[2025-11-07T16:15:36.957+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: data_pipeline_challenge.write_json manual__2025-11-07T16:15:26.696647+00:00 [queued]>
+[2025-11-07T16:15:36.960+0000] {taskinstance.py:2306} INFO - Starting attempt 1 of 1
+[2025-11-07T16:15:37.368+0000] {taskinstance.py:2330} INFO - Executing <Task(PythonOperator): write_json> on 2025-11-07 16:15:26.696647+00:00
+[2025-11-07T16:15:37.388+0000] {standard_task_runner.py:90} INFO - Running: ['***', 'tasks', 'run', 'data_pipeline_challenge', 'write_json', 'manual__2025-11-07T16:15:26.696647+00:00', '--job-id', '9', '--raw', '--subdir', 'DAGS_FOLDER/data.py', '--cfg-path', '/tmp/tmp8_efoqus']
+[2025-11-07T16:15:37.381+0000] {warnings.py:110} WARNING - /home/***/.local/lib/python3.12/site-packages/***/task/task_runner/standard_task_runner.py:61: DeprecationWarning: This process (pid=67) is multi-threaded, use of fork() may lead to deadlocks in the child.
+  pid = os.fork()
+
+[2025-11-07T16:15:37.394+0000] {standard_task_runner.py:91} INFO - Job 9: Subtask write_json
+[2025-11-07T16:15:37.395+0000] {standard_task_runner.py:63} INFO - Started process 69 to run task
+[2025-11-07T16:15:37.430+0000] {warnings.py:110} WARNING - /home/***/.local/lib/python3.12/site-packages/***/settings.py:195: DeprecationWarning: The sql_alchemy_conn option in [core] has been moved to the sql_alchemy_conn option in [database] - the old setting has been used, but please update your config.
+  SQL_ALCHEMY_CONN = conf.get("database", "SQL_ALCHEMY_CONN")
+
+[2025-11-07T16:15:37.613+0000] {task_command.py:426} INFO - Running <TaskInstance: data_pipeline_challenge.write_json manual__2025-11-07T16:15:26.696647+00:00 [running]> on host 1e6d3c7d42ba
+[2025-11-07T16:15:38.069+0000] {taskinstance.py:2648} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='data_pipeline_challenge' AIRFLOW_CTX_TASK_ID='write_json' AIRFLOW_CTX_EXECUTION_DATE='2025-11-07T16:15:26.696647+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2025-11-07T16:15:26.696647+00:00'
+[2025-11-07T16:15:38.075+0000] {taskinstance.py:430} INFO - ::endgroup::
+[2025-11-07T16:15:38.223+0000] {taskinstance.py:441} INFO - ::group::Post task execution logs
+[2025-11-07T16:15:38.227+0000] {taskinstance.py:2905} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 465, in _execute_task
+    result = _execute_callable(context=context, **execute_callable_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 432, in _execute_callable
+    return execute_callable(context=context, **execute_callable_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/baseoperator.py", line 400, in wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/operators/python.py", line 235, in execute
+    return_value = self.execute_callable()
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/operators/python.py", line 252, in execute_callable
+    return self.python_callable(*self.op_args, **self.op_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/airflow/dags/data.py", line 34, in write_json
+    json.dump(stats, f)
+  File "/usr/local/lib/python3.12/json/__init__.py", line 179, in dump
+    for chunk in iterable:
+  File "/usr/local/lib/python3.12/json/encoder.py", line 432, in _iterencode
+    yield from _iterencode_dict(o, _current_indent_level)
+  File "/usr/local/lib/python3.12/json/encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "/usr/local/lib/python3.12/json/encoder.py", line 439, in _iterencode
+    o = _default(o)
+        ^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/json/encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type int64 is not JSON serializable
+[2025-11-07T16:15:38.309+0000] {taskinstance.py:1206} INFO - Marking task as FAILED. dag_id=data_pipeline_challenge, task_id=write_json, run_id=manual__2025-11-07T16:15:26.696647+00:00, execution_date=20251107T161526, start_date=20251107T161536, end_date=20251107T161538
+[2025-11-07T16:15:38.364+0000] {standard_task_runner.py:110} ERROR - Failed to execute job 9 for task write_json (Object of type int64 is not JSON serializable; 69)
+[2025-11-07T16:15:38.421+0000] {local_task_job_runner.py:240} INFO - Task exited with return code 1
+[2025-11-07T16:15:38.490+0000] {taskinstance.py:3498} INFO - 0 downstream tasks scheduled from follow-on schedule check
+[2025-11-07T16:15:38.503+0000] {local_task_job_runner.py:222} INFO - ::endgroup::

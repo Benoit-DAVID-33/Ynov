@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Console d'administration</title>
+  <link rel="stylesheet" href="shared/style.css">
+</head>
+<body>
+  <header>
+    <h1>Console d'administration</h1>
+    <button id="logout" hidden>Se déconnecter</button>
+  </header>
+
+  <main class="wide">
+    <form id="login" class="card narrow" hidden>
+      <h2>Connexion</h2>
+      <label class="inline">Mot de passe
+        <input id="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button class="primary">Se connecter</button>
+    </form>
+    <p id="error" class="error" hidden></p>
+
+    <div id="dashboard" hidden>
+      <section class="card">
+        <h2>État des services</h2>
+        <div id="services" class="services"></div>
+      </section>
+
+      <section class="tiles" id="tiles"></section>
+
+      <section class="card">
+        <h2>Par type</h2>
+        <table id="by-type">
+          <thead><tr><th>Type</th><th>Réalisés</th><th>Non terminés</th><th>Échoués</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>Derniers traitements</h2>
+        <p id="jobs-error" class="error" hidden></p>
+        <div class="scroll">
+          <table id="jobs">
+            <thead><tr><th>Date</th><th>Fichier</th><th>Résultat</th><th>Langue</th><th>Modèle</th><th>Statut</th><th>Calcul</th><th>Réponse</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Journaux</h2>
+        <label class="inline">Fichier
+          <select id="log-file"></select>
+        </label>
+        <pre id="log" class="log"></pre>
+      </section>
+    </div>
+  </main>
+
+  <script src="admin.js"></script>
+</body>
+</html>

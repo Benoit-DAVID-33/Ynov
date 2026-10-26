@@ -1,0 +1,22 @@
+# Python
+.venv/
+.venv-convert/
+__pycache__/
+.pytest_cache/
+
+# Secrets and local configuration
+.env
+
+# Runtime data: uploads, results, logs, SQLite database
+data/
+
+# Models: downloaded or converted locally (scripts/convert_translation_model.py)
+models/
+
+# Outputs of the original prototype script
+audio-*.wav
+sub-*.srt
+output.mp4
+
+# Tooling
+.claude/

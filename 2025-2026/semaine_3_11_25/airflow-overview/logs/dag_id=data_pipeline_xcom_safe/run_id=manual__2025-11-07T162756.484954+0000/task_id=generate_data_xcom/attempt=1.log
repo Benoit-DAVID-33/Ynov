@@ -1,0 +1,23 @@
+[2025-11-07T16:27:58.948+0000] {local_task_job_runner.py:120} INFO - ::group::Pre task execution logs
+[2025-11-07T16:27:58.983+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: data_pipeline_xcom_safe.generate_data_xcom manual__2025-11-07T16:27:56.484954+00:00 [queued]>
+[2025-11-07T16:27:58.994+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: data_pipeline_xcom_safe.generate_data_xcom manual__2025-11-07T16:27:56.484954+00:00 [queued]>
+[2025-11-07T16:27:58.996+0000] {taskinstance.py:2306} INFO - Starting attempt 1 of 1
+[2025-11-07T16:27:59.282+0000] {taskinstance.py:2330} INFO - Executing <Task(PythonOperator): generate_data_xcom> on 2025-11-07 16:27:56.484954+00:00
+[2025-11-07T16:27:59.293+0000] {warnings.py:110} WARNING - /home/***/.local/lib/python3.12/site-packages/***/task/task_runner/standard_task_runner.py:61: DeprecationWarning: This process (pid=79) is multi-threaded, use of fork() may lead to deadlocks in the child.
+  pid = os.fork()
+
+[2025-11-07T16:27:59.296+0000] {standard_task_runner.py:63} INFO - Started process 81 to run task
+[2025-11-07T16:27:59.296+0000] {standard_task_runner.py:90} INFO - Running: ['***', 'tasks', 'run', 'data_pipeline_xcom_safe', 'generate_data_xcom', 'manual__2025-11-07T16:27:56.484954+00:00', '--job-id', '13', '--raw', '--subdir', 'DAGS_FOLDER/data.py', '--cfg-path', '/tmp/tmp6t22a1b5']
+[2025-11-07T16:27:59.301+0000] {standard_task_runner.py:91} INFO - Job 13: Subtask generate_data_xcom
+[2025-11-07T16:27:59.330+0000] {warnings.py:110} WARNING - /home/***/.local/lib/python3.12/site-packages/***/settings.py:195: DeprecationWarning: The sql_alchemy_conn option in [core] has been moved to the sql_alchemy_conn option in [database] - the old setting has been used, but please update your config.
+  SQL_ALCHEMY_CONN = conf.get("database", "SQL_ALCHEMY_CONN")
+
+[2025-11-07T16:27:59.399+0000] {task_command.py:426} INFO - Running <TaskInstance: data_pipeline_xcom_safe.generate_data_xcom manual__2025-11-07T16:27:56.484954+00:00 [running]> on host 1e6d3c7d42ba
+[2025-11-07T16:27:59.571+0000] {taskinstance.py:2648} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='data_pipeline_xcom_safe' AIRFLOW_CTX_TASK_ID='generate_data_xcom' AIRFLOW_CTX_EXECUTION_DATE='2025-11-07T16:27:56.484954+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2025-11-07T16:27:56.484954+00:00'
+[2025-11-07T16:27:59.574+0000] {taskinstance.py:430} INFO - ::endgroup::
+[2025-11-07T16:27:59.614+0000] {python.py:237} INFO - Done. Returned value was: {'value': [794, 647, 272, 980, 280, 339, 164, 663, 774, 803, 660, 442, 194, 297, 899, 248, 308, 785, 944, 673, 2, 229, 355, 687, 194, 494, 947, 729, 331, 668, 705, 455, 27, 667, 228, 59, 130, 201, 618, 445, 396, 339, 545, 318, 314, 657, 70, 366, 472, 203, 66, 519, 353, 517, 502, 257, 62, 931, 58, 37, 877, 455, 139, 26, 641, 755, 10, 349, 738, 662, 736, 120, 786, 27, 701, 762, 733, 849, 891, 266, 637, 529, 477, 860, 775, 302, 44, 315, 759, 777, 346, 594, 985, 452, 154, 202, 653, 891, 65, 308]}
+[2025-11-07T16:27:59.615+0000] {taskinstance.py:441} INFO - ::group::Post task execution logs
+[2025-11-07T16:27:59.658+0000] {taskinstance.py:1206} INFO - Marking task as SUCCESS. dag_id=data_pipeline_xcom_safe, task_id=generate_data_xcom, run_id=manual__2025-11-07T16:27:56.484954+00:00, execution_date=20251107T162756, start_date=20251107T162758, end_date=20251107T162759
+[2025-11-07T16:27:59.714+0000] {local_task_job_runner.py:240} INFO - Task exited with return code 0
+[2025-11-07T16:27:59.754+0000] {taskinstance.py:3498} INFO - 1 downstream tasks scheduled from follow-on schedule check
+[2025-11-07T16:27:59.757+0000] {local_task_job_runner.py:222} INFO - ::endgroup::

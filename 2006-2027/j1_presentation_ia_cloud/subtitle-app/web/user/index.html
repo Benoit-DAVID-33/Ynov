@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sous-titrage automatique</title>
+  <link rel="stylesheet" href="shared/style.css">
+  <style id="cue-style"></style>
+</head>
+<body>
+  <header>
+    <h1>Sous-titrage automatique</h1>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2><span class="step">1</span> Fichier</h2>
+      <label id="dropzone" class="dropzone">
+        <input id="file" type="file" accept=".mp4,.wav" hidden>
+        <strong>Déposez un fichier ici</strong> ou cliquez pour le choisir
+        <small id="limits">Vidéo .mp4 ou audio .wav</small>
+      </label>
+      <small>Seul votre dernier fichier est conservé sur le serveur : en déposer un nouveau supprime le précédent et ses résultats.</small>
+      <p id="file-info" class="muted" hidden></p>
+      <div id="upload-progress" class="progress" hidden>
+        <progress max="100" value="0"></progress>
+        <span></span>
+      </div>
+    </section>
+
+    <section class="card" id="options" hidden>
+      <h2><span class="step">2</span> Résultat souhaité</h2>
+      <div id="outputs" class="choices"></div>
+
+      <div class="fields">
+        <label>Langue du résultat
+          <select id="language"></select>
+        </label>
+        <label>Modèle
+          <select id="model"></select>
+        </label>
+      </div>
+
+      <fieldset id="burn-style" hidden>
+        <legend>Apparence des sous-titres incrustés</legend>
+        <div class="fields">
+          <label>Taille
+            <select id="burn-size">
+              <option value="small">Petite</option>
+              <option value="medium" selected>Moyenne</option>
+              <option value="large">Grande</option>
+            </select>
+          </label>
+          <label>Couleur
+            <input id="burn-color" type="color" value="#ffffff">
+          </label>
+        </div>
+        <small>Les sous-titres incrustés font partie de l'image : leur apparence se choisit avant le traitement.</small>
+      </fieldset>
+
+      <button id="start" class="primary" disabled>Lancer le traitement</button>
+    </section>
+
+    <section class="card" id="job" hidden>
+      <h2><span class="step">3</span> Traitement</h2>
+      <p id="job-status" class="status"></p>
+      <div id="job-progress" class="progress" hidden>
+        <progress max="100" value="0"></progress>
+        <span></span>
+      </div>
+      <button id="cancel" hidden>Annuler le traitement</button>
+
+      <form id="editor" hidden>
+        <p class="muted">Corrigez le texte ; les horaires sont conservés. Un sous-titre vidé est supprimé.</p>
+        <div id="editor-rows" class="editor-rows"></div>
+        <div class="actions">
+          <button class="primary">Enregistrer et régénérer</button>
+          <button type="button" id="editor-close">Fermer sans enregistrer</button>
+        </div>
+      </form>
+
+      <div id="result" hidden>
+        <div id="preview"></div>
+        <div id="player-style" class="fields" hidden>
+          <label>Taille des sous-titres
+            <input id="cue-size" type="range" min="50" max="250" step="10" value="100">
+          </label>
+          <label>Couleur des sous-titres
+            <input id="cue-color" type="color" value="#ffffff">
+          </label>
+        </div>
+        <div class="actions">
+          <a id="download" class="primary button">Télécharger</a>
+          <button id="edit">Corriger le texte</button>
+          <button id="another">Autre résultat pour ce fichier</button>
+          <button id="reset">Nouveau fichier</button>
+          <button id="delete" class="danger">Supprimer mon fichier</button>
+        </div>
+      </div>
+    </section>
+
+    <p id="error" class="error" hidden></p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

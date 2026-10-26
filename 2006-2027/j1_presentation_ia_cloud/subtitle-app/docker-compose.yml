@@ -1,0 +1,104 @@
+# Start with scripts/run_docker.ps1 (Windows) or scripts/run_docker.sh (Linux),
+# which pick the CPU or GPU variant. By hand:
+#   CPU : docker compose up -d --build
+#   GPU : DEVICE=gpu docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d --build
+
+name: subtitle-app
+
+x-app: &app
+  image: subtitle-app:${DEVICE:-cpu}
+  build:
+    context: .
+    args:
+      DEVICE: ${DEVICE:-cpu}
+  restart: unless-stopped
+
+x-app-env: &app-env
+  DATABASE_URL: postgresql+psycopg://subtitle:${POSTGRES_PASSWORD:?définir POSTGRES_PASSWORD dans .env}@db:5432/subtitle
+  # cpu or gpu: also selects the default model and batch size (see .env.example).
+  DEVICE: ${DEVICE:-cpu}
+  ENABLED_MODELS: ${ENABLED_MODELS:-whisper-medium.en,whisper-small.en,whisper-medium,whisper-small}
+  DEFAULT_MODEL: ${DEFAULT_MODEL:-}
+  ENABLED_TRANSLATORS: ${ENABLED_TRANSLATORS:-opus-mt-en-fr}
+  MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-2048}
+  MAX_DURATION_S: ${MAX_DURATION_S:-7200}
+  RETENTION_DAYS: ${RETENTION_DAYS:-7}
+  MAX_PENDING_MEDIA_S: ${MAX_PENDING_MEDIA_S:-14400}
+  MAX_PENDING_JOBS_PER_VISITOR: ${MAX_PENDING_JOBS_PER_VISITOR:-4}
+  BURN_PRESET: ${BURN_PRESET:-superfast}
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: subtitle
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: subtitle
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U subtitle"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # User-facing application.
+  api:
+    <<: *app
+    # No access log: the health check alone would write a line every 10 s.
+    command: ["uvicorn", "app.api:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]
+    environment: *app-env
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      - data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+
+  # Admin console: its own service and port, so it stays reachable (logs,
+  # service status) when the application, the workers or the database are down.
+  # It deliberately depends on nothing.
+  admin:
+    <<: *app
+    command: ["uvicorn", "app.admin:create_app", "--factory", "--host", "0.0.0.0", "--port", "8001", "--no-access-log"]
+    environment:
+      <<: *app-env
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?définir ADMIN_PASSWORD dans .env}
+      API_URL: http://api:8000
+    ports:
+      - "${ADMIN_PORT:-8001}:8001"
+    volumes:
+      - data:/data
+
+  worker:
+    <<: *app
+    command: ["python", "-m", "app.worker"]
+    environment:
+      <<: *app-env
+      BATCH_SIZE: ${BATCH_SIZE:-0}
+      CPU_THREADS: ${CPU_THREADS:-0}
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-3}
+      FAST_LANE_SLOTS: ${FAST_LANE_SLOTS:-1}
+      FAST_LANE_MAX_S: ${FAST_LANE_MAX_S:-300}
+      SPEAKER_IDENTIFIER: ${SPEAKER_IDENTIFIER:-}
+    volumes:
+      - data:/data
+      - models:/models
+    # Lets a running job finish its current step before the container is killed;
+    # an interrupted job is requeued automatically at the next start.
+    stop_grace_period: 2m
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  db:
+  data:
+  models:

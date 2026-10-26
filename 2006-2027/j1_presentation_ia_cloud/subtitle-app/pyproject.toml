@@ -1,0 +1,3 @@
+[tool.pytest.ini_options]
+# The prototype test_pipeline_3.py at the root is a script, not a test.
+testpaths = ["tests"]

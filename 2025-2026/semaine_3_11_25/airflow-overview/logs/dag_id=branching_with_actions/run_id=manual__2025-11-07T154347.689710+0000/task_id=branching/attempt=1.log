@@ -1,0 +1,30 @@
+[2025-11-07T15:43:50.545+0000] {local_task_job_runner.py:120} INFO - ::group::Pre task execution logs
+[2025-11-07T15:43:50.621+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: branching_with_actions.branching manual__2025-11-07T15:43:47.689710+00:00 [queued]>
+[2025-11-07T15:43:50.637+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: branching_with_actions.branching manual__2025-11-07T15:43:47.689710+00:00 [queued]>
+[2025-11-07T15:43:50.638+0000] {taskinstance.py:2306} INFO - Starting attempt 1 of 1
+[2025-11-07T15:43:50.666+0000] {taskinstance.py:2330} INFO - Executing <Task(BranchPythonOperator): branching> on 2025-11-07 15:43:47.689710+00:00
+[2025-11-07T15:43:50.692+0000] {standard_task_runner.py:90} INFO - Running: ['***', 'tasks', 'run', 'branching_with_actions', 'branching', 'manual__2025-11-07T15:43:47.689710+00:00', '--job-id', '2', '--raw', '--subdir', 'DAGS_FOLDER/branch.py', '--cfg-path', '/tmp/tmpi45zmfrx']
+[2025-11-07T15:43:50.691+0000] {warnings.py:110} WARNING - /home/***/.local/lib/python3.12/site-packages/***/task/task_runner/standard_task_runner.py:61: DeprecationWarning: This process (pid=48) is multi-threaded, use of fork() may lead to deadlocks in the child.
+  pid = os.fork()
+
+[2025-11-07T15:43:50.703+0000] {standard_task_runner.py:91} INFO - Job 2: Subtask branching
+[2025-11-07T15:43:50.704+0000] {standard_task_runner.py:63} INFO - Started process 49 to run task
+[2025-11-07T15:43:50.767+0000] {warnings.py:110} WARNING - /home/***/.local/lib/python3.12/site-packages/***/settings.py:195: DeprecationWarning: The sql_alchemy_conn option in [core] has been moved to the sql_alchemy_conn option in [database] - the old setting has been used, but please update your config.
+  SQL_ALCHEMY_CONN = conf.get("database", "SQL_ALCHEMY_CONN")
+
+[2025-11-07T15:43:50.915+0000] {task_command.py:426} INFO - Running <TaskInstance: branching_with_actions.branching manual__2025-11-07T15:43:47.689710+00:00 [running]> on host 1e6d3c7d42ba
+[2025-11-07T15:43:51.150+0000] {taskinstance.py:2648} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='branching_with_actions' AIRFLOW_CTX_TASK_ID='branching' AIRFLOW_CTX_EXECUTION_DATE='2025-11-07T15:43:47.689710+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2025-11-07T15:43:47.689710+00:00'
+[2025-11-07T15:43:51.152+0000] {taskinstance.py:430} INFO - ::endgroup::
+[2025-11-07T15:43:51.204+0000] {baseoperator.py:399} WARNING - BranchPythonOperator.execute cannot be called outside TaskInstance!
+[2025-11-07T15:43:51.205+0000] {warnings.py:110} WARNING - /home/***/.local/lib/python3.12/site-packages/***/utils/context.py:320: AirflowContextDeprecationWarning: Accessing 'execution_date' from the template is deprecated and will be removed in a future version. Please use 'data_interval_start' or 'logical_date' instead.
+  warnings.warn(_create_deprecation_warning(k, replacements))
+
+[2025-11-07T15:43:51.206+0000] {python.py:237} INFO - Done. Returned value was: weekday_task
+[2025-11-07T15:43:51.207+0000] {branch.py:36} INFO - Branch into weekday_task
+[2025-11-07T15:43:51.207+0000] {skipmixin.py:178} INFO - Following branch weekday_task
+[2025-11-07T15:43:51.250+0000] {skipmixin.py:246} INFO - Skipping tasks [('weekend_task', -1)]
+[2025-11-07T15:43:51.300+0000] {taskinstance.py:441} INFO - ::group::Post task execution logs
+[2025-11-07T15:43:51.342+0000] {taskinstance.py:1206} INFO - Marking task as SUCCESS. dag_id=branching_with_actions, task_id=branching, run_id=manual__2025-11-07T15:43:47.689710+00:00, execution_date=20251107T154347, start_date=20251107T154350, end_date=20251107T154351
+[2025-11-07T15:43:51.406+0000] {local_task_job_runner.py:240} INFO - Task exited with return code 0
+[2025-11-07T15:43:51.446+0000] {taskinstance.py:3498} INFO - 1 downstream tasks scheduled from follow-on schedule check
+[2025-11-07T15:43:51.450+0000] {local_task_job_runner.py:222} INFO - ::endgroup::

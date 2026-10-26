@@ -1,0 +1,20 @@
+# config.py
+import pygame
+
+pygame.init()
+
+GRID_SIZE = 20
+GRID_WIDTH = 30
+GRID_HEIGHT = 20
+
+SCREEN_WIDTH = GRID_WIDTH * GRID_SIZE
+SCREEN_HEIGHT = GRID_HEIGHT * GRID_SIZE
+FPS = 60
+
+# Couleurs
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+DARK_GREEN = (0, 180, 0)
+RED = (255, 0, 0)
+GRAY = (40, 40, 40)

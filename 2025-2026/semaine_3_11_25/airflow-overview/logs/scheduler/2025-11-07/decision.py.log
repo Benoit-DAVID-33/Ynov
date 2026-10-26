@@ -1,0 +1,18 @@
+[2025-11-07T16:38:04.994+0000] {processor.py:161} INFO - Started process (PID=571) to work on /opt/airflow/dags/decision.py
+[2025-11-07T16:38:04.997+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/decision.py for tasks to queue
+[2025-11-07T16:38:05.000+0000] {logging_mixin.py:188} INFO - [2025-11-07T16:38:04.999+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/decision.py
+[2025-11-07T16:38:05.044+0000] {processor.py:840} INFO - DAG(s) 'conditional_decision_pipeline' retrieved from /opt/airflow/dags/decision.py
+[2025-11-07T16:38:05.189+0000] {logging_mixin.py:188} INFO - [2025-11-07T16:38:05.188+0000] {override.py:1829} INFO - Created Permission View: can delete on DAG:conditional_decision_pipeline
+[2025-11-07T16:38:05.201+0000] {logging_mixin.py:188} INFO - [2025-11-07T16:38:05.200+0000] {override.py:1829} INFO - Created Permission View: can edit on DAG:conditional_decision_pipeline
+[2025-11-07T16:38:05.211+0000] {logging_mixin.py:188} INFO - [2025-11-07T16:38:05.211+0000] {override.py:1829} INFO - Created Permission View: can read on DAG:conditional_decision_pipeline
+[2025-11-07T16:38:05.215+0000] {logging_mixin.py:188} INFO - [2025-11-07T16:38:05.215+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2025-11-07T16:38:05.227+0000] {logging_mixin.py:188} INFO - [2025-11-07T16:38:05.226+0000] {dag.py:3118} INFO - Creating ORM DAG for conditional_decision_pipeline
+[2025-11-07T16:38:05.228+0000] {logging_mixin.py:188} INFO - [2025-11-07T16:38:05.228+0000] {dag.py:3954} INFO - Setting next_dagrun for conditional_decision_pipeline to None, run_after=None
+[2025-11-07T16:38:05.252+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/decision.py took 0.265 seconds
+[2025-11-07T16:38:35.692+0000] {processor.py:161} INFO - Started process (PID=578) to work on /opt/airflow/dags/decision.py
+[2025-11-07T16:38:35.693+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/decision.py for tasks to queue
+[2025-11-07T16:38:35.695+0000] {logging_mixin.py:188} INFO - [2025-11-07T16:38:35.695+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/decision.py
+[2025-11-07T16:38:35.724+0000] {processor.py:840} INFO - DAG(s) 'conditional_decision_pipeline' retrieved from /opt/airflow/dags/decision.py
+[2025-11-07T16:38:35.764+0000] {logging_mixin.py:188} INFO - [2025-11-07T16:38:35.764+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2025-11-07T16:38:35.779+0000] {logging_mixin.py:188} INFO - [2025-11-07T16:38:35.779+0000] {dag.py:3954} INFO - Setting next_dagrun for conditional_decision_pipeline to None, run_after=None
+[2025-11-07T16:38:35.805+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/decision.py took 0.121 seconds

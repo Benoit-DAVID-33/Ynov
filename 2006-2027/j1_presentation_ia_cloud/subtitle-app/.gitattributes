@@ -1,0 +1,5 @@
+# Shell scripts must keep Unix line endings to run in Linux containers and servers.
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.mp4 binary
+*.pdf binary
