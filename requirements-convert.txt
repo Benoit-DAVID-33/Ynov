@@ -1,0 +1,8 @@
+# Only for scripts/convert_translation_model.py (one-off model conversion).
+# Install the CPU build of PyTorch first, it is much smaller:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+#   pip install -r requirements-convert.txt
+torch
+transformers>=4.44,<5
+ctranslate2>=4.4
+sentencepiece>=0.2

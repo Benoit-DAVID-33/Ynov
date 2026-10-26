@@ -1,0 +1,3 @@
+# Worker only: transcription and translation model runtime.
+faster-whisper>=1.1,<2
+sentencepiece>=0.2

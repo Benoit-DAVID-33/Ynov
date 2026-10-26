@@ -1,0 +1,4 @@
+# NVIDIA GPU only (DEVICE=gpu): CUDA 12 libraries used by the inference engine.
+# The NVIDIA driver itself must be installed on the machine.
+nvidia-cublas-cu12
+nvidia-cudnn-cu12==9.*
