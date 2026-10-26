@@ -1,8 +1,6 @@
 from datetime import timedelta
 from pathlib import Path
 
-from fastapi.testclient import TestClient
-
 from app import media, retention
 from app.db import session_scope
 from app.models import Job, Upload, utcnow
@@ -73,23 +71,21 @@ def test_new_upload_replaces_the_previous_one_but_keeps_its_history(
     body = {"upload_id": old["upload_id"], "output_type": "text"}
     assert client.post("/api/jobs", json=body).status_code == 410
     # ...but the answer and the statistics are kept for the administrator.
-    admin_client.post("/api/login", json={"password": "secret"})
+    admin_client.post("/api/login", json={"username": "admin", "password": "admin-secret"})
     assert admin_client.get("/api/overview").json()["stats"]["completed"]["total"] == 2
     texts = {job["filename"]: job["text"] for job in admin_client.get("/api/jobs").json()}
     assert texts["old.mp4"] == "Hello world. This is a fake transcription."
 
 
-def test_each_visitor_keeps_their_own_latest_file(client, submit, run_worker, settings):
+def test_each_user_keeps_their_own_latest_file(client, stranger, submit, run_worker, settings):
     mine = submit("mine.mp4")
-    other_visitor = TestClient(client.app)
-    theirs = _upload(other_visitor, "theirs.mp4").json()
+    theirs = _upload(stranger, "theirs.mp4").json()
     run_worker()
 
     assert _purge(settings) == 0
     assert _files(settings, mine) == (True, True)
     with session_scope() as session:
-        owners = {u.owner_id for u in session.query(Upload)}
-        assert len(owners) == 2 and None not in owners
+        assert len({u.owner_id for u in session.query(Upload)}) == 2
         assert Path(session.get(Upload, theirs["id"]).path).exists()
 
 
@@ -115,7 +111,7 @@ def test_latest_file_expires_after_the_retention_period(client, submit, run_work
         assert session.get(Job, job["id"]).text.startswith("Hello")
 
 
-def test_last_upload_is_returned_to_its_visitor_only(client, submit, run_worker):
+def test_last_upload_is_returned_to_its_owner_only(client, stranger, submit, run_worker):
     assert client.get("/api/uploads/last").json() == {"upload": None, "jobs": []}
 
     submit("first.mp4")
@@ -125,4 +121,4 @@ def test_last_upload_is_returned_to_its_visitor_only(client, submit, run_worker)
     assert last["upload"]["filename"] == "latest.mp4"
     assert [(j["id"], j["status"]) for j in last["jobs"]] == [(job["id"], "done")]
 
-    assert TestClient(client.app).get("/api/uploads/last").json()["upload"] is None
+    assert stranger.get("/api/uploads/last").json()["upload"] is None

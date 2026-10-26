@@ -21,16 +21,21 @@ La solution est faite de deux sites distincts, sans lien de l'un vers l'autre :
 
 | Site | Adresse par défaut | Public |
 |---|---|---|
-| Application | <http://localhost:8000> | Utilisateurs |
-| Console d'administration | <http://localhost:8001> | Administrateur, sur mot de passe |
+| Application | <http://localhost:8000> | Utilisateurs, avec un compte (création ouverte à tous) |
+| Console d'administration | <http://localhost:8001> | Administrateur, avec un compte de rôle `admin` |
 
 ## Deux façons de lancer, sur CPU ou sur GPU
 
 | | Sans Docker (poste de développement) | Avec Docker (serveur, démonstration) |
 |---|---|---|
 | Commande | `scripts\run_local.ps1 -Device cpu\|gpu` | `scripts\run_docker.ps1 -Device cpu\|gpu` |
-| Base de données | SQLite, dans `.\data` | PostgreSQL, dans un volume |
+| Base de données | PostgreSQL à part (`DATABASE_URL`) ; fichiers dans `.\data` | PostgreSQL, dans un volume |
 | Relance après crash | par le script | par Docker (`restart: unless-stopped`) |
+
+PostgreSQL est la seule base prise en charge. Sans Docker, le plus simple est de ne lancer que
+la base : `docker compose up -d db` (accessible sur `127.0.0.1:5432`, `DATABASE_URL` par défaut
+`postgresql+psycopg://subtitle:subtitle@127.0.0.1:5432/subtitle` ; la base se crée avec le mot
+de passe `POSTGRES_PASSWORD` du `.env`, à reporter dans `DATABASE_URL`).
 
 Dans les deux cas, **le matériel se choisit au lancement** et le reste s'adapte :
 
@@ -48,8 +53,8 @@ d'administration indique sur quel matériel tourne chaque worker.
 
 ### Sans Docker (Windows)
 
-Tout tourne sur le poste : application, console d'administration, worker, base SQLite, fichiers
-et journaux dans `.\data`.
+Tout tourne sur le poste : application, console d'administration, worker, fichiers et journaux
+dans `.\data`. Seule la base PostgreSQL est à part (voir ci-dessus).
 
 1. Installer Python ≥ 3.11 et ffmpeg (`winget install Gyan.FFmpeg`).
 2. Créer l'environnement et installer les dépendances :
@@ -81,8 +86,10 @@ et journaux dans `.\data`.
    powershell -ExecutionPolicy Bypass -File scripts\run_local.ps1 -Device gpu
    ```
 
-5. Ouvrir l'application sur <http://localhost:8000> et la console d'administration sur
-   <http://localhost:8001> (mot de passe `admin-local`, modifiable avec `-AdminPassword`).
+5. Ouvrir l'application sur <http://localhost:8000> (« Créer un compte » à la première visite) et
+   la console d'administration sur <http://localhost:8001> (compte `admin`, mot de passe
+   `admin-local`, modifiables avec `-AdminUsername` et `-AdminPassword` ; ce compte est créé au
+   premier lancement, ensuite ces deux options sont ignorées).
 
 Arrêt : `Ctrl+C`. Relance : même commande, les traitements en attente ou interrompus sont
 repris. Le script surveille les trois processus et relance celui qui s'arrête.
@@ -101,21 +108,24 @@ Voir le [manuel d'installation serveur](#manuel-dinstallation-serveur-administra
 
 ## Utilisation
 
-1. **Déposer** un fichier : une barre indique l'avancement de l'envoi.
-2. **Choisir** le type de résultat, la langue (origine ou français) et le modèle. Pour une
+1. **Se connecter** : à la première visite, « Créer un compte » (nom d'utilisateur et mot de
+   passe de 8 caractères au moins) ; ensuite, « Se connecter ». Le mot de passe est stocké haché
+   (argon2) et ne peut pas être récupéré.
+2. **Déposer** un fichier : une barre indique l'avancement de l'envoi.
+3. **Choisir** le type de résultat, la langue (origine ou français) et le modèle. Pour une
    vidéo à sous-titres incrustés, choisir aussi la taille et la couleur des sous-titres : ils
    font partie de l'image et ne peuvent plus être modifiés ensuite.
-3. **Suivre** le traitement : position dans la file, puis barre de progression avec l'étape en
+4. **Suivre** le traitement : position dans la file, puis barre de progression avec l'étape en
    cours (transcription, traduction, incrustation). Un traitement en attente ou en cours peut
    être annulé.
-4. **Consulter et télécharger** le résultat. Pour une vidéo avec piste de sous-titres, la
+5. **Consulter et télécharger** le résultat. Pour une vidéo avec piste de sous-titres, la
    taille et la couleur des sous-titres se règlent en direct sous le lecteur ; le réglage est
    mémorisé dans le navigateur.
-5. **Corriger** si besoin : « Corriger le texte » ouvre la liste des sous-titres ; après
+6. **Corriger** si besoin : « Corriger le texte » ouvre la liste des sous-titres ; après
    enregistrement, les fichiers sont refaits à partir du texte corrigé, sans nouvelle
    transcription (quelques secondes, plus le ré-encodage pour une vidéo incrustée). Les
    corrections sont reprises pour les autres résultats du même fichier dans la même langue.
-6. **Supprimer** : « Supprimer mon fichier » efface immédiatement le fichier et ses résultats
+7. **Supprimer** : « Supprimer mon fichier » efface immédiatement le fichier et ses résultats
    du serveur.
 
 Les sous-titres sont mis en forme sur deux lignes de 42 caractères au plus ; un passage plus
@@ -131,18 +141,18 @@ suffit de choisir à nouveau le même fichier pour continuer au lieu de recommen
 
 **File d'attente.** Quand trop de média est déjà en attente (4 h par défaut,
 `MAX_PENDING_MEDIA_S`), l'application annonce « service saturé » avant même l'envoi du
-fichier, au lieu d'accepter un travail qu'elle rendrait très tard. Un même visiteur peut avoir
+fichier, au lieu d'accepter un travail qu'elle rendrait très tard. Un même utilisateur peut avoir
 4 traitements en attente ou en cours à la fois.
 
-**Confidentialité.** Un fichier et ses résultats ne sont accessibles qu'au navigateur qui a
-déposé le fichier ; pour tout autre, ils répondent comme s'ils n'existaient pas.
+**Confidentialité.** Un fichier et ses résultats ne sont accessibles qu'au compte qui a
+déposé le fichier ; pour tout autre, ils répondent comme s'ils n'existaient pas. Sans
+connexion, tout répond 401.
 
-**Conservation.** Chaque visiteur ne garde sur le serveur que son dernier fichier et ses
+**Conservation.** Chaque utilisateur ne garde sur le serveur que son dernier fichier et ses
 résultats : en déposer un nouveau supprime le précédent dès que ses traitements sont terminés.
-En revenant sur la page, le dernier fichier et son résultat sont proposés à nouveau. Tout
-fichier est de toute façon supprimé après 7 jours (`RETENTION_DAYS`). Les visiteurs sont
-distingués par un cookie anonyme ; un client d'API qui ne conserve pas ce cookie est vu comme
-un nouveau visiteur à chaque dépôt, et ses fichiers ne partent alors qu'à l'expiration.
+En revenant sur la page, le dernier fichier et son résultat sont proposés à nouveau, depuis
+n'importe quel navigateur où l'on se connecte. Tout fichier est de toute façon supprimé après
+7 jours (`RETENTION_DAYS`).
 La purge ne supprime que des fichiers : statistiques et texte des réponses restent visibles
 dans la console d'administration.
 
@@ -189,8 +199,14 @@ appelé en HTTP) se branche comme un modèle, voir plus bas.
 
 ### Installer et démarrer
 
-1. Copier `.env.example` en `.env` et renseigner `POSTGRES_PASSWORD` et `ADMIN_PASSWORD`
-   (deux valeurs longues et aléatoires).
+1. **Essai rapide : rien à configurer.** `docker compose up -d --build` construit l'image et
+   démarre la base, l'application, la console et le worker. Le mot de passe de l'administrateur
+   (compte `admin`) est alors généré au premier démarrage et affiché une seule fois :
+   `docker compose logs admin`.
+   **Serveur :** copier `.env.example` en `.env` et renseigner `POSTGRES_PASSWORD` et
+   `ADMIN_PASSWORD` (valeurs longues et aléatoires ; `ADMIN_USERNAME` vaut `admin` par défaut)
+   avant le premier démarrage. Le couple `ADMIN_USERNAME` / `ADMIN_PASSWORD` ne sert qu'une
+   fois : il crée le premier compte administrateur quand la base n'en contient aucun.
 2. Démarrer en choisissant le matériel. Sous Windows :
 
    ```bash
@@ -234,7 +250,10 @@ Relancer la commande de démarrage (même `-Device`).
 - Les traitements en attente sont conservés en base et repris.
 - Un traitement interrompu en cours de route est détecté (absence de signal de vie pendant
   60 s) et remis en file automatiquement ; après 3 interruptions il est marqué en échec.
-- Une base créée par une version précédente est mise à niveau au démarrage, sans perte.
+- Une base créée par une version précédente est mise à niveau au démarrage par les migrations
+  (Alembic, `app/migrations`), sans perte. Exception : le passage aux comptes utilisateurs
+  (migration `0001`) abandonne les anciens dépôts, qui n'appartenaient à aucun compte : leurs
+  tables sont recréées vides.
 
 Passer de `cpu` à `gpu` (ou l'inverse) : relancer avec l'autre valeur, les données sont
 conservées.
@@ -242,8 +261,10 @@ conservées.
 ### Console d'administration
 
 Service séparé de l'application (autre processus, autre port, aucun lien entre les deux
-sites), accessible après connexion par mot de passe (`ADMIN_PASSWORD`). Elle reste disponible
-quand l'application, le worker ou la base de données sont arrêtés, et montre :
+sites), accessible après connexion avec un compte de rôle `admin` (nom d'utilisateur et mot de
+passe). Les comptes sont en base, comme ceux des utilisateurs ; le premier est créé depuis
+`ADMIN_USERNAME` / `ADMIN_PASSWORD`. La console reste disponible quand l'application ou le
+worker sont arrêtés, et montre :
 
 - l'**état des services** : application, base de données, chaque worker, espace disque ;
 - l'**usage** : inférences réalisées, traitements non terminés et échoués (au total et par
@@ -252,7 +273,41 @@ quand l'application, le worker ou la base de données sont arrêtés, et montre 
 - les **journaux** de chaque service (`data/logs`), y compris ceux d'un service tombé.
 
 Cinq mots de passe erronés bloquent la connexion pendant une minute. La session dure
-8 heures.
+8 heures. Si la base de données est arrêtée, un administrateur déjà connecté garde l'accès aux
+journaux et à l'état des services ; une nouvelle connexion, elle, a besoin de la base.
+
+### Comptes
+
+L'inscription est ouverte à tous depuis l'application (`/register.html`), limitée à
+`MAX_REGISTRATIONS_PER_HOUR` créations par heure et par adresse IP. Une connexion dure
+`SESSION_DAYS` jours. L'administrateur gère les comptes en ligne de commande :
+
+```bash
+docker compose exec api python -m app.users create alice          # demande le mot de passe
+docker compose exec api python -m app.users create root --admin
+docker compose exec api python -m app.users passwd alice          # mot de passe oublié
+docker compose exec api python -m app.users disable alice         # et enable, list
+```
+
+Changer un mot de passe ou désactiver un compte termine ses connexions en cours.
+
+### Base de données
+
+PostgreSQL. Le schéma est géré par Alembic : chaque service applique les migrations en
+attente à son démarrage (verrou en base : un seul le fait à la fois). Après une modification
+de `app/models.py`, générer la migration puis la relire :
+
+```bash
+.venv\Scripts\python -m alembic revision --autogenerate -m "description"
+```
+
+Tables : `users` (comptes, mot de passe haché, rôle `user` ou `admin`), `auth_sessions`
+(connexions ; seule l'empreinte SHA-256 du jeton est gardée), `uploads` (fichiers déposés),
+`upload_sessions` (envois en cours), `jobs` (traitements et leurs résultats texte), `workers`.
+Les **vidéos et audios, déposés comme produits, restent sur le disque** (volume `data`) :
+la base n'en garde que les métadonnées (propriétaire, chemin, taille, durée) et la liste des
+fichiers produits. Supprimer un compte supprime en cascade ses dépôts et ses traitements en
+base ; les fichiers correspondants sont à retirer du volume.
 
 ### Configuration
 
@@ -278,8 +333,12 @@ Documentation interactive : <http://localhost:8000/docs>.
 | `PUT` | `/api/jobs/{id}/segments` | Corriger le texte des sous-titres (`{"texts": […]}`) et refaire les fichiers |
 | `POST` | `/api/jobs/{id}/cancel` | Annuler un traitement en attente ou en cours |
 | `DELETE` | `/api/uploads/{id}` | Supprimer un fichier et ses résultats |
-| `GET` | `/api/uploads/last` | Dernier fichier du visiteur encore sur le serveur, avec ses traitements |
+| `GET` | `/api/uploads/last` | Dernier fichier de l'utilisateur encore sur le serveur, avec ses traitements |
 | `GET` | `/api/config` | Modèles, langues de traduction, sorties disponibles et limites |
+| `POST` | `/api/auth/register` | Créer un compte : `{"username", "password"}` ; connecte aussitôt (409 si le nom est pris) |
+| `POST` | `/api/auth/login` | Se connecter : mêmes champs ; pose le cookie `session` |
+| `POST` | `/api/auth/logout` | Terminer la connexion |
+| `GET` | `/api/auth/me` | Compte connecté (`{"username", "role"}`) ; 401 sinon |
 
 ```json
 {
@@ -294,10 +353,12 @@ Documentation interactive : <http://localhost:8000/docs>.
 Seuls `upload_id` et `output_type` sont obligatoires ; `subtitle_style` ne s'applique qu'à
 `video_embedded`.
 
-**Identité du client.** Il n'y a pas de comptes : le premier appel pose un cookie `client_id`,
-et un fichier, ses traitements et ses résultats ne sont visibles que des requêtes qui le
-présentent (les autres reçoivent 404). Un client d'API doit donc conserver ses cookies entre
-ses appels (`requests.Session`, `httpx.Client`, `curl -c/-b`).
+**Authentification.** Tout est protégé par un compte, sauf `/api/health`, `/api/config`,
+`/api/queue` et les pages de connexion. Après `register` ou `login`, le serveur pose un cookie
+`session` (HttpOnly, SameSite Lax, Secure en HTTPS) ; un client d'API doit le conserver entre
+ses appels (`requests.Session`, `httpx.Client`, `curl -c/-b`). Un fichier, ses traitements et
+ses résultats ne sont visibles que de leur propriétaire : pour tout autre compte, 404.
+Sans connexion, 401.
 
 `POST /api/jobs` peut répondre 503 avec `Retry-After` (file saturée) ou 429 (trop de
 traitements en cours pour ce client).
@@ -365,18 +426,27 @@ Une classe `SpeakerIdentifier` dont la méthode `identify(audio_path, segments)`
 .venv\Scripts\python -m pytest
 ```
 
-Les tests n'ont besoin ni de GPU, ni de ffmpeg, ni de Docker, ni des modèles (transcription
-et traduction factices, ffmpeg simulé). Ils tournent sur SQLite ; pour les rejouer sur le
-PostgreSQL de la pile Docker, définir `TEST_DATABASE_URL` vers une base dédiée (ses tables
-sont vidées à chaque test : ne jamais viser la base de l'application) :
+Les tests n'ont besoin ni de GPU, ni de ffmpeg, ni des modèles (transcription et traduction
+factices, ffmpeg simulé), mais d'un PostgreSQL jetable : `TEST_DATABASE_URL` doit désigner
+une base dédiée (son schéma est supprimé et recréé par les migrations avant chaque test :
+ne jamais viser la base de l'application).
 
 ```bash
 docker compose exec db createdb -U subtitle subtitle_test
 ```
 
 ```bash
+$env:TEST_DATABASE_URL = "postgresql+psycopg://subtitle:MOT_DE_PASSE@127.0.0.1:5432/subtitle_test"
+.venv\Scripts\python -m pytest
+```
+
+Depuis le conteneur, sans environnement local :
+
+```bash
 docker compose run --rm --no-deps -v ./tests:/srv/tests:ro -e HOME=/tmp -e TEST_DATABASE_URL=postgresql+psycopg://subtitle:MOT_DE_PASSE@db:5432/subtitle_test api sh -c "pip install -q --user pytest httpx && python -m pytest -q -p no:cacheprovider tests"
-``` Le modèle factice peut aussi servir à une
+```
+
+Le modèle factice peut aussi servir à une
 démonstration instantanée : `scripts\run_local.ps1 -Models fake -DefaultModel fake`.
 
 ## Vérifier les performances
@@ -385,15 +455,20 @@ démonstration instantanée : `scripts\run_local.ps1 -Models fake -DefaultModel 
 python scripts/benchmark.py input.mp4 --users 10 --output-type video_embedded
 ```
 
-Le script simule 10 utilisateurs simultanés et vérifie que chaque résultat arrive en moins
-de temps que la durée du média (attente dans la file comprise).
+Le script simule 10 utilisateurs simultanés (un compte créé pour chacun : prévoir
+`MAX_REGISTRATIONS_PER_HOUR` au moins égal au nombre d'utilisateurs) et vérifie que chaque
+résultat arrive en moins de temps que la durée du média (attente dans la file comprise).
 
 ## Organisation du code
 
 ```
 app/
   api.py            application utilisateur : API HTTP + interface web
+  auth.py           comptes : hachage argon2, sessions, limitation des tentatives
+  users.py          gestion des comptes en ligne de commande (python -m app.users)
   admin.py          console d'administration (service séparé)
+  db.py             connexion PostgreSQL et application des migrations
+  migrations/       schéma de la base (Alembic)
   worker.py         processus de traitement (file, voie rapide, signal de vie, reprise)
   jobs.py           file de traitements en base
   pipeline.py       transcription, traduction, fabrication des fichiers, progression

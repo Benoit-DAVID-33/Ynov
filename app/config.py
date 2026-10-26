@@ -17,7 +17,8 @@ DEVICE_DEFAULTS = {
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    database_url: str = "sqlite:///./data/subtitle.db"
+    # PostgreSQL only. The default matches the development database of .env.example.
+    database_url: str = "postgresql+psycopg://subtitle:subtitle@127.0.0.1:5432/subtitle"
     storage_dir: Path = Path("./data")
     max_upload_mb: int = 2048
     # Cost (compute time, memory) grows with the duration, not with the file size.
@@ -32,7 +33,7 @@ class Settings(BaseSettings):
     # media take (compute time / media duration) times as long to clear.
     max_pending_media_s: float = 14400.0
     max_pending_jobs_per_visitor: int = 4
-    # Each visitor keeps the files of their latest upload only; even those are
+    # Each user keeps the files of their latest upload only; even those are
     # deleted after this many days (0 = never).
     retention_days: float = 7.0
 
@@ -55,7 +56,17 @@ class Settings(BaseSettings):
     # reference machine (see docs/ARCHITECTURE.md).
     burn_preset: Literal["ultrafast", "superfast", "veryfast", "faster", "fast", "medium"] = "superfast"
 
-    # Admin console (separate service). Empty password disables the login.
+    # Accounts. A login session lasts this many days; behind an HTTPS reverse proxy that
+    # hides the scheme from the application, cookie_secure forces the Secure flag.
+    session_days: float = 30.0
+    cookie_secure: bool = False
+    # Accounts created per hour from one IP address (behind a proxy, everyone shares it).
+    max_registrations_per_hour: int = 20
+    # Admin console (separate service). The first administrator account is created from
+    # these two values when no administrator exists yet; later changes are ignored
+    # (use `python -m app.users`). An empty password is replaced by a random one,
+    # printed once on the console's standard error.
+    admin_username: str = "admin"
     admin_password: str = ""
     # Where the admin console probes the user-facing API.
     api_url: str = "http://localhost:8000"

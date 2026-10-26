@@ -1,5 +1,6 @@
 # Lance la solution en local, sans Docker : application, console d'administration et worker,
-# base SQLite, fichiers et journaux dans .\data.
+# fichiers et journaux dans .\data. La base est un PostgreSQL a part (DATABASE_URL, voir
+# .env.example) ; le plus simple : docker compose up -d db
 #
 #   powershell -ExecutionPolicy Bypass -File scripts\run_local.ps1                # auto
 #   powershell -ExecutionPolicy Bypass -File scripts\run_local.ps1 -Device cpu
@@ -7,6 +8,7 @@
 #
 # -Device choisit ou tournent les modeles ; le modele par defaut et la taille des lots suivent
 # (cpu : whisper-small.en ; gpu : whisper-medium.en). auto = gpu si nvidia-smi repond.
+# Le premier compte administrateur est cree au premier lancement (-AdminUsername / -AdminPassword).
 # Arret : Ctrl+C. Relance : meme commande (les traitements en attente sont repris).
 # (Fichier sans accents : Windows PowerShell 5.1 le lit en ANSI.)
 param(
@@ -14,6 +16,8 @@ param(
     [string]$Device = "auto",
     [string]$Models = "",
     [string]$DefaultModel = "",
+    [string]$DatabaseUrl = "",
+    [string]$AdminUsername = "admin",
     [string]$AdminPassword = "admin-local",
     [int]$Port = 8000,
     [int]$AdminPort = 8001
@@ -81,10 +85,17 @@ if (-not $Models) {
 $env:DEVICE = $Device
 $env:ENABLED_MODELS = $Models
 $env:DEFAULT_MODEL = $DefaultModel   # vide = choisi selon -Device
+if ($DatabaseUrl) { $env:DATABASE_URL = $DatabaseUrl }
+$env:ADMIN_USERNAME = $AdminUsername
 $env:ADMIN_PASSWORD = $AdminPassword
 $env:API_URL = "http://127.0.0.1:$Port"
 $env:PYTHONUNBUFFERED = "1"
 $env:HF_HUB_DISABLE_SYMLINKS_WARNING = "1"
+
+# La base doit repondre avant de lancer les trois services.
+if (-not (Test-Command { & $python -c "from app.config import get_settings; from sqlalchemy import create_engine; create_engine(get_settings().database_url).connect().close()" })) {
+    throw "PostgreSQL injoignable (DATABASE_URL, voir .env.example). Pour une base locale : docker compose up -d db"
+}
 
 # Trois processus independants : la console d'administration reste disponible si
 # l'application ou le worker s'arrete, et un processus qui s'arrete est relance.
@@ -96,7 +107,7 @@ $services = [ordered]@{
 $processes = @{}
 Write-Host "Materiel       : $($Device.ToUpper())"
 Write-Host "Application    : http://localhost:$Port"
-Write-Host "Administration : http://localhost:$AdminPort (mot de passe : $AdminPassword)"
+Write-Host "Administration : http://localhost:$AdminPort (compte : $AdminUsername / $AdminPassword, cree au premier lancement)"
 try {
     while ($true) {
         foreach ($name in $services.Keys) {

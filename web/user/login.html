@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Connexion · Sous-titrage automatique</title>
+  <link rel="stylesheet" href="shared/style.css">
+</head>
+<body>
+  <header>
+    <h1>Sous-titrage automatique</h1>
+  </header>
+
+  <main>
+    <form id="auth" class="card narrow" data-endpoint="/api/auth/login">
+      <h2>Connexion</h2>
+      <div class="form-grid">
+        <label>Nom d'utilisateur
+          <input id="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+        </label>
+        <label>Mot de passe
+          <input id="password" type="password" autocomplete="current-password" required>
+        </label>
+        <button class="primary">Se connecter</button>
+      </div>
+      <p id="error" class="error" hidden></p>
+      <small>Pas encore de compte ? <a href="register.html">Créer un compte</a></small>
+    </form>
+  </main>
+
+  <script src="auth.js"></script>
+</body>
+</html>

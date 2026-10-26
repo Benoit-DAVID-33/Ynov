@@ -7,7 +7,7 @@ __pycache__/
 # Secrets and local configuration
 .env
 
-# Runtime data: uploads, results, logs, SQLite database
+# Runtime data: uploads, results, logs
 data/
 
 # Models: downloaded or converted locally (scripts/convert_translation_model.py)

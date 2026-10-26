@@ -40,7 +40,7 @@ if ($Stop) { docker compose stop; exit $LASTEXITCODE }
 if ($Logs) { docker compose logs -f --tail 100; exit $LASTEXITCODE }
 
 if (-not (Test-Path ".env")) {
-    throw "Fichier .env absent : copiez .env.example en .env et renseignez POSTGRES_PASSWORD et ADMIN_PASSWORD."
+    Write-Warning "Pas de fichier .env : valeurs par defaut (mot de passe de base 'subtitle', mot de passe administrateur genere et affiche une fois par 'docker compose logs admin'). Pour un serveur, copiez .env.example en .env et renseignez les secrets."
 }
 
 $files = @("-f", "docker-compose.yml")
@@ -59,7 +59,7 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 Write-Host ""
 Write-Host "Materiel       : $($Device.ToUpper())"
 Write-Host "Application    : http://localhost:8000"
-Write-Host "Administration : http://localhost:8001 (mot de passe : ADMIN_PASSWORD du fichier .env)"
+Write-Host "Administration : http://localhost:8001 (compte ADMIN_USERNAME, 'admin' par defaut ; mot de passe ADMIN_PASSWORD, ou genere : docker compose logs admin)"
 Write-Host "Etat           : docker compose ps        Journaux : scripts\run_docker.ps1 -Logs"
 Write-Host "Le worker telecharge le modele au premier lancement : il est pret quand la console"
 Write-Host "d'administration l'affiche 'en service'."
