@@ -217,6 +217,16 @@ def worker_heartbeat(session: Session, worker_id: str, device: str | None = None
         worker.heartbeat_at = utcnow()
 
 
+def forget_silent_workers(session: Session, silent_for_s: float) -> int:
+    """Drop the workers gone for good (container replaced, crash never restarted).
+
+    A worker that has just stopped stays listed, as "down", until then: the console
+    shows a recent failure, not every container that ever existed.
+    """
+    limit = utcnow() - timedelta(seconds=silent_for_s)
+    return session.execute(delete(Worker).where(Worker.heartbeat_at < limit)).rowcount
+
+
 def forget_workers(session: Session, host: str) -> None:
     """Drop the entries of a host: on clean stop, and at start to clear a crashed run."""
     session.execute(delete(Worker).where(Worker.id.startswith(f"{host}:", autoescape=True)))

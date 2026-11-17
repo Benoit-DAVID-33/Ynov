@@ -110,6 +110,9 @@ class Settings(BaseSettings):
     poll_interval_s: float = 1.0
     heartbeat_interval_s: float = 10.0
     stale_after_s: float = 60.0
+    # A worker silent for longer leaves the console's list (shown "down" until then).
+    # With no worker left, the console shows "Worker : à l'arrêt" anyway.
+    forget_worker_after_s: float = 300.0
     max_attempts: int = 3
 
     @property
