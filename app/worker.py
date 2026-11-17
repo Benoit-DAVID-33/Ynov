@@ -204,6 +204,7 @@ def main() -> None:
                 jobs.worker_heartbeat(session, worker_id, device)
                 recovered = jobs.requeue_stale(session, settings.stale_after_s, settings.max_attempts)
                 retention.purge(session, settings)
+                jobs.forget_silent_workers(session, settings.forget_worker_after_s)
                 auth.purge_expired_sessions(session)
             if recovered:
                 log.warning("recovered %d interrupted job(s)", recovered)

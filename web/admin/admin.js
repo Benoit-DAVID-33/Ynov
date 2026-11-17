@@ -59,10 +59,14 @@ function renderServices(overview) {
   ];
   if (overview.workers.length === 0) pills.push(pill("Worker", false, "Aucun worker enregistré"));
   for (const worker of overview.workers) {
-    const device = { cuda: " (GPU)", cpu: " (CPU)", triton: " (Triton)" }[worker.device] ?? "";
+    const device = { cuda: " (GPU)", cpu: " (CPU)", triton: " (inférence sur Triton, GPU)" }[worker.device] ?? "";
     pills.push(pill(`Worker ${worker.id}${device}`, worker.up, `Dernier signal : ${fmt.date(worker.heartbeat_at)}`));
   }
-  pills.push(el("span", { className: "pill", textContent: `Disque : ${overview.disk.free_gb.toFixed(0)} Go libres sur ${overview.disk.total_gb.toFixed(0)}` }));
+  const disk = el("span", { className: "pill", textContent: `Stockage des fichiers : ${overview.disk.free_gb.toFixed(0)} Go libres sur ${overview.disk.total_gb.toFixed(0)}` });
+  // Measured from inside the container: with Docker Desktop (Windows, macOS) this is the
+  // virtual disk of Docker, not the disk of the computer.
+  disk.title = "Espace libre là où l'application range les fichiers déposés et les résultats (volume de données). Sous Docker Desktop, c'est le disque virtuel de Docker, pas le disque de l'ordinateur.";
+  pills.push(disk);
   $("services").replaceChildren(...pills);
 }
 

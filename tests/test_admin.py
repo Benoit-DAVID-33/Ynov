@@ -1,9 +1,11 @@
+from datetime import timedelta
+
 from fastapi.testclient import TestClient
 
 from app import jobs, media
 from app.config import get_settings
 from app.db import session_scope
-from app.models import User, utcnow
+from app.models import User, Worker, utcnow
 from tests.conftest import ADMIN_USERNAME, PASSWORD, USER_PASSWORD
 
 
@@ -169,3 +171,18 @@ def test_logs_are_listed_and_tailed(admin_client, settings):
     assert tail == ["line 497", "line 498", "line 499"]
     assert admin_client.get("/api/logs/..%2Ftest.db").status_code == 404
     assert admin_client.get("/api/logs/missing.log").status_code == 404
+
+
+def test_workers_gone_for_good_leave_the_console(admin_client, settings):
+    with session_scope() as session:
+        jobs.worker_heartbeat(session, "replaced-container:1", "triton")
+        jobs.worker_heartbeat(session, "just-crashed:1", "triton")
+        jobs.worker_heartbeat(session, "alive:1", "triton")
+        session.get(Worker, "replaced-container:1").heartbeat_at = utcnow() - timedelta(hours=2)
+        session.get(Worker, "just-crashed:1").heartbeat_at = utcnow() - timedelta(minutes=2)
+    with session_scope() as session:
+        assert jobs.forget_silent_workers(session, settings.forget_worker_after_s) == 1
+    _login(admin_client)
+    workers = {w["id"]: w["up"] for w in admin_client.get("/api/overview").json()["workers"]}
+    # A recent failure stays visible as down; a long-gone container no longer shows.
+    assert workers == {"just-crashed:1": False, "alive:1": True}
