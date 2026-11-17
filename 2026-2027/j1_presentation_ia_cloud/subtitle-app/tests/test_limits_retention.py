@@ -111,6 +111,26 @@ def test_latest_file_expires_after_the_retention_period(client, submit, run_work
         assert session.get(Job, job["id"]).text.startswith("Hello")
 
 
+def test_file_of_another_installation_is_not_marked_purged(client, submit, run_worker, settings):
+    # A local run and a Docker stack sharing one database: each one only reaches
+    # its own storage. A purge must not mark the other's file as deleted.
+    job = submit()
+    run_worker()
+    with session_scope() as session:
+        upload = session.get(Upload, job["upload_id"])
+        upload.path = "/elsewhere/uploads/clip.mp4"
+        upload.created_at = utcnow() - timedelta(days=8)
+    assert _purge(settings) == 0
+    with session_scope() as session:
+        assert session.get(Upload, job["upload_id"]).purged_at is None
+
+
+def test_windows_path_is_compared_as_a_path(settings):
+    inside = f"{settings.uploads_dir}/clip.mp4".replace("/", "\\")
+    assert retention._is_in_storage(Path(inside), settings)
+    assert not retention._is_in_storage(Path("data\\uploads\\clip.mp4"), settings)
+
+
 def test_last_upload_is_returned_to_its_owner_only(client, stranger, submit, run_worker):
     assert client.get("/api/uploads/last").json() == {"upload": None, "jobs": []}
 

@@ -24,7 +24,14 @@ def delete_files(session: Session, upload: Upload, settings: Settings) -> bool:
 
     Returns False when a file is still in use (a worker that has not noticed a
     cancellation yet, on Windows): the next purge tries again.
+
+    Also returns False, and keeps the upload unpurged, when its file is not in this
+    process's storage directory: it was stored by another installation sharing the
+    database (a local run next to Docker), whose files this process cannot reach.
+    Marking it purged would leave those files on disk for good.
     """
+    if not _is_in_storage(Path(upload.path), settings):
+        return False
     try:
         Path(upload.path).unlink(missing_ok=True)
         for job in session.scalars(select(Job).where(Job.upload_id == upload.id)):
@@ -36,6 +43,16 @@ def delete_files(session: Session, upload: Upload, settings: Settings) -> bool:
         return False
     upload.purged_at = utcnow()
     return True
+
+
+def _is_in_storage(path: Path, settings: Settings) -> bool:
+    # A Windows path ("data\\uploads\\x.mp4") read on Linux is a single file name:
+    # normalise the separators so that it is compared as a path.
+    path = Path(str(path).replace("\\", "/"))
+    try:
+        return path.resolve().is_relative_to(settings.uploads_dir.resolve())
+    except OSError:
+        return False
 
 
 def drop_upload_session(session: Session, upload_session: UploadSession, settings: Settings) -> None:
