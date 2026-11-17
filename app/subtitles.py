@@ -1,6 +1,8 @@
+from app import text as words
 from app.domain import Segment
 
-# Usual subtitling guideline: at most two lines of about 42 characters.
+# Usual subtitling guideline: at most two lines of about 42 characters (21 for
+# Chinese, whose characters are twice as wide).
 MAX_LINE_CHARS = 42
 MAX_LINES = 2
 
@@ -14,16 +16,16 @@ def _timestamp(seconds: float, separator: str) -> str:
 
 
 def _line(segment: Segment) -> str:
-    text = " ".join(segment.text.split())
+    text = words.join(words.tokens(segment.text))
     return f"[{segment.speaker}] {text}" if segment.speaker and text else text
 
 
 def _wrap(text: str, max_chars: int) -> list[str]:
     """Greedy word wrap; a single word longer than the limit keeps its own line."""
     lines, current = [], ""
-    for word in text.split():
-        candidate = f"{current} {word}" if current else word
-        if current and len(candidate) > max_chars:
+    for word in words.tokens(text):
+        candidate = words.join([current, word]) if current else word
+        if current and words.width(candidate) > max_chars:
             lines.append(current)
             current = word
         else:
@@ -35,11 +37,15 @@ def _wrap(text: str, max_chars: int) -> list[str]:
 
 def _balance(first: str, second: str, max_chars: int) -> list[str]:
     """Two lines of similar length read better than a full line and an orphan word."""
-    words = f"{first} {second}".split()
+    parts = words.tokens(f"{first} {second}")
     best = (first, second)
-    for cut in range(1, len(words)):
-        a, b = " ".join(words[:cut]), " ".join(words[cut:])
-        if max(len(a), len(b)) <= max_chars and abs(len(a) - len(b)) < abs(len(best[0]) - len(best[1])):
+
+    def gap(a: str, b: str) -> int:
+        return abs(words.width(a) - words.width(b))
+
+    for cut in range(1, len(parts)):
+        a, b = words.join(parts[:cut]), words.join(parts[cut:])
+        if max(words.width(a), words.width(b)) <= max_chars and gap(a, b) < gap(*best):
             best = (a, b)
     return list(best)
 
@@ -56,11 +62,11 @@ def layout(segments: list[Segment], max_chars: int = MAX_LINE_CHARS) -> list[tup
         if not lines:
             continue
         groups = [lines[i:i + MAX_LINES] for i in range(0, len(lines), MAX_LINES)]
-        total = sum(len(line) for line in lines)
+        total = sum(words.width(line) for line in lines)
         duration = segment.end - segment.start
         start = segment.start
         for index, group in enumerate(groups):
-            share = sum(len(line) for line in group) / total
+            share = sum(words.width(line) for line in group) / total
             end = segment.end if index == len(groups) - 1 else start + duration * share
             if len(group) == 2:
                 group = _balance(*group, max_chars)
@@ -86,4 +92,4 @@ def to_vtt(segments: list[Segment], max_chars: int = MAX_LINE_CHARS) -> str:
 
 
 def to_text(segments: list[Segment]) -> str:
-    return " ".join(line for line in map(_line, segments) if line)
+    return words.join([line for line in map(_line, segments) if line])

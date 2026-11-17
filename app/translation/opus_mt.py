@@ -9,10 +9,13 @@ class OpusMT(Translator):
     """Helsinki-NLP OPUS-MT model converted to CTranslate2, run locally.
 
     The model directory is produced by scripts/convert_translation_model.py.
+    Models covering several target variants need a ``>>id<<`` token in front
+    of each sentence to pick one (e.g. ``>>cmn_Hans<<``, simplified Mandarin).
     """
 
-    def __init__(self, model_dir: Path):
+    def __init__(self, model_dir: Path, target_token: str | None = None):
         self.model_dir = model_dir
+        self.prefix = [target_token] if target_token else []
 
     def load(self) -> None:
         settings = get_settings()
@@ -30,22 +33,30 @@ class OpusMT(Translator):
         self._target = sentencepiece.SentencePieceProcessor(str(self.model_dir / "target.spm"))
 
     def translate(self, texts: list[str]) -> list[str]:
-        tokens = [self._source.encode(text, out_type=str) + ["</s>"] for text in texts]
+        tokens = [
+            self.prefix + self._source.encode(text, out_type=str) + ["</s>"] for text in texts
+        ]
         results = self._translator.translate_batch(tokens, beam_size=4, max_batch_size=16)
         return [self._target.decode(result.hypotheses[0]) for result in results]
 
 
-def _register(name: str, source: str, target: str) -> None:
+def _register(name: str, source: str, target: str, target_token: str | None = None) -> None:
     def model_dir() -> Path:
         return get_settings().translation_models_dir / name
 
     register_translator(
         name,
-        lambda: OpusMT(model_dir()),
+        lambda: OpusMT(model_dir(), target_token),
         source=source,
         target=target,
         is_available=lambda: (model_dir() / "model.bin").is_file(),
     )
 
 
+# The six official UN languages, from English. The Hugging Face model behind
+# each name is in scripts/convert_translation_model.py.
 _register("opus-mt-en-fr", "en", "fr")
+_register("opus-mt-en-es", "en", "es")
+_register("opus-mt-en-ru", "en", "ru")
+_register("opus-mt-en-ar", "en", "ar", target_token=">>ara<<")
+_register("opus-mt-en-zh", "en", "zh", target_token=">>cmn_Hans<<")

@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import replace
 
+from app import text as words
 from app.domain import Segment
 
 _SENTENCE_END = (".", "?", "!", "…")
@@ -28,13 +29,13 @@ def _group_sentences(segments: list[Segment]) -> list[list[Segment]]:
 
 def _distribute(translation: str, group: list[Segment]) -> list[Segment]:
     """Spread the translated words over the subtitles, in proportion to the originals."""
-    words = translation.split()
+    parts = words.tokens(translation)
     total = sum(len(s.text) for s in group) or 1
     result, taken, seen = [], 0, 0
     for index, segment in enumerate(group):
         seen += len(segment.text)
-        upto = len(words) if index == len(group) - 1 else round(len(words) * seen / total)
-        result.append(replace(segment, text=" ".join(words[taken:upto])))
+        upto = len(parts) if index == len(group) - 1 else round(len(parts) * seen / total)
+        result.append(replace(segment, text=words.join(parts[taken:upto])))
         taken = upto
     return result
 
