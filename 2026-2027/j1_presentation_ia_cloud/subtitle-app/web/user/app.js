@@ -90,6 +90,32 @@ function recall(key) {
   try { return localStorage.getItem(key); } catch { return null; }
 }
 
+// --- Notifications: the visitor can work elsewhere and come back when it is ready.
+const TITLE = document.title;
+
+function askNotificationPermission() {
+  // Must follow a click; browsers only allow it on HTTPS or localhost.
+  if ("Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission().catch(() => {});
+  }
+}
+
+function notify(title, body) {
+  if (!document.hidden) return; // the visitor is looking at the page already
+  document.title = `${title} · ${TITLE}`;
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  const notification = new Notification(title, { body, tag: "subtitle-app" });
+  notification.onclick = () => { window.focus(); notification.close(); };
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && !currentJobActive()) document.title = TITLE;
+});
+
+function currentJobActive() {
+  return currentJob?.status === "queued" || currentJob?.status === "processing";
+}
+
 async function openUploadSession(file) {
   const known = recall(resumeKey(file));
   if (known) {
@@ -196,14 +222,17 @@ async function handleFile(file) {
   $("file-info").textContent = file.name;
   show($("file-info"));
   setProgress("upload-progress", 0, "Envoi");
+  askNotificationPermission();
   try {
     upload = await sendFile(file);
   } catch (e) {
     show($("file-info"), false);
+    notify("Échec de l'envoi", e.message);
     return fail(e.message);
   } finally {
     show($("upload-progress"), false);
   }
+  notify("Fichier envoyé", `${upload.filename} : choisissez le résultat souhaité.`);
   const duration = formatDuration(upload.duration_s);
   $("file-info").textContent = `${upload.filename}${duration ? ` · ${duration}` : ""}`;
   renderOutputs();
@@ -246,6 +275,7 @@ async function startJob() {
   if (!output) return;
   show($("error"), false);
   $("start").disabled = true;
+  askNotificationPermission();
   const body = {
     upload_id: upload.id,
     output_type: output,
@@ -279,6 +309,8 @@ function poll(jobId) {
       const job = await api(`/jobs/${jobId}`);
       renderJob(job);
       if (job.status === "queued" || job.status === "processing") poll(jobId);
+      else if (job.status === "done") notify("Résultat prêt", `${upload?.filename ?? "Votre fichier"} : le résultat peut être téléchargé.`);
+      else if (job.status === "failed") notify("Échec du traitement", job.error ?? "");
     } catch {
       poll(jobId); // transient network error or server restart: keep trying
     }
@@ -297,6 +329,7 @@ function renderJob(job) {
   show($("result"), !active);
   show($("download"), available);
   show($("edit"), available);
+  if (!active && !document.hidden) document.title = TITLE;
   if (!available) {
     show($("player-style"), false);
     $("preview").replaceChildren();
@@ -304,9 +337,11 @@ function renderJob(job) {
 
   if (job.status === "queued") {
     status.textContent = `En file d'attente (position ${job.queue_position ?? "?"})…`;
+    document.title = `En attente · ${TITLE}`;
   } else if (job.status === "processing") {
     status.textContent = "Traitement en cours…";
     setProgress("job-progress", job.progress, STAGES[job.stage] ?? "Préparation");
+    document.title = `${Math.round(job.progress)} % · ${TITLE}`;
   } else if (job.status === "failed") {
     status.textContent = `Le traitement a échoué : ${job.error}`;
   } else if (job.status === "cancelled") {

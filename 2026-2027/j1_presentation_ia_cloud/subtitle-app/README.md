@@ -118,7 +118,9 @@ Voir le [manuel d'installation serveur](#manuel-dinstallation-serveur-administra
    font partie de l'image et ne peuvent plus être modifiés ensuite.
 4. **Suivre** le traitement : position dans la file, puis barre de progression avec l'étape en
    cours (transcription, traduction, incrustation). Un traitement en attente ou en cours peut
-   être annulé.
+   être annulé. Inutile de rester sur la page : l'avancement s'affiche dans le titre de
+   l'onglet, et une notification du navigateur prévient quand l'envoi du fichier puis le
+   résultat sont prêts (si le visiteur l'a autorisée ; l'onglet doit rester ouvert).
 5. **Consulter et télécharger** le résultat. Pour une vidéo avec piste de sous-titres, la
    taille et la couleur des sous-titres se règlent en direct sous le lecteur ; le réglage est
    mémorisé dans le navigateur.
