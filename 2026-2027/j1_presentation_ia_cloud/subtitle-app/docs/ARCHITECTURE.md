@@ -100,10 +100,12 @@ volume partagé. Vérifié en arrêtant brutalement l'application : la console l
 l'arrêt », ses journaux restent lisibles, puis elle repasse « en service » après la relance
 automatique.
 
-**Traduction locale en greffon.** Le français est produit par `opus-mt-en-fr`
-(Helsinki-NLP, Apache 2.0) converti pour CTranslate2 : même moteur que Whisper, pas de
-PyTorch à l'exécution, 80 Mo. Les sous-titres étant souvent des fragments de phrase, ils sont
-regroupés en phrases, traduits, puis redistribués sur les horodatages d'origine au prorata
+**Traduction locale en greffon.** Les cinq autres langues de l'ONU sont produites depuis
+l'anglais par des modèles OPUS-MT (Helsinki-NLP) convertis pour CTranslate2 : même moteur que
+Whisper, pas de PyTorch à l'exécution, 80 Mo par langue (235 Mo pour l'arabe). Les modèles
+arabe et chinois couvrent plusieurs variantes : un jeton `>>ara<<` ou `>>cmn_Hans<<` en tête
+de phrase choisit l'arabe standard et le mandarin simplifié. Les sous-titres étant souvent des
+fragments de phrase, ils sont regroupés en phrases, traduits, puis redistribués sur les horodatages d'origine au prorata
 des longueurs. L'interface `Translator` permet de brancher à la place le service de traduction
 du client.
 **Correction des sous-titres sans retranscrire.** Le texte corrigé par l'utilisateur est
@@ -267,7 +269,8 @@ la devinette de mots de passe sans remplacer un pare-feu ou un reverse proxy.
   jamais utilisés comme chemins.
 - Supprimer un compte directement en base supprime ses lignes en cascade mais pas ses fichiers
   sur le disque ; la purge automatique ne les retrouve plus (elle part des lignes en base).
-- La traduction fournie va de l'anglais vers le français uniquement.
+- La traduction part de l'anglais uniquement (vers les cinq autres langues de l'ONU) : un
+  audio dans une autre langue ne peut être livré que dans sa langue d'origine.
 - La correction porte sur le texte, pas sur les horaires des sous-titres.
 - Traduction automatique généraliste : à relire avant diffusion (noms propres, expressions).
 - Les sous-titres incrustés sont figés dans l'image : leur style se choisit avant le

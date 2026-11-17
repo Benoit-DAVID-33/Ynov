@@ -4,19 +4,19 @@
 #   docker build --build-arg DEVICE=cpu -t subtitle-app:cpu .
 #   docker build --build-arg DEVICE=gpu -t subtitle-app:gpu .
 
-# --- One-off conversion of the translation model; PyTorch stays out of the final image.
+# --- One-off conversion of the translation models; PyTorch stays out of the final image.
 FROM python:3.11-slim AS translation-model
 WORKDIR /build
 COPY requirements-convert.txt scripts/convert_translation_model.py ./
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir -r requirements-convert.txt \
-    && python convert_translation_model.py --output /translation/opus-mt-en-fr
+    && python convert_translation_model.py --output-dir /translation
 
 
 FROM python:3.11-slim
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core \
+    && apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core fonts-noto-cjk \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /srv

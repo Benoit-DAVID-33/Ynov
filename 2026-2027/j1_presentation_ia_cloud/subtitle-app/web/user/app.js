@@ -9,7 +9,10 @@ const STAGES = {
   translation: "Traduction",
   video: "Incrustation des sous-titres",
 };
-const LANGUAGES = { fr: "Français", en: "Anglais", es: "Espagnol", de: "Allemand", it: "Italien" };
+const LANGUAGES = {
+  fr: "Français", en: "Anglais", es: "Espagnol", ru: "Russe", ar: "Arabe", zh: "Chinois",
+  de: "Allemand", it: "Italien",
+};
 const POLL_MS = 700;
 
 const $ = (id) => document.getElementById(id);
@@ -358,6 +361,7 @@ async function openEditor() {
     time.textContent = `${clock(segment.start)} → ${clock(segment.end)}`;
     const input = document.createElement("input");
     input.value = segment.text;
+    input.dir = "auto";  // Arabic is written right to left
     input.maxLength = 500;
     label.append(time, input);
     return label;
@@ -407,6 +411,7 @@ async function renderPreview(job) {
   }
   const name = has("subtitles.srt") ? "subtitles.srt" : "transcript.txt";
   const pre = document.createElement("pre");
+  pre.dir = "auto";
   pre.textContent = await (await fetch(fileUrl(name))).text();
   preview.append(pre);
 }
