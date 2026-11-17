@@ -9,7 +9,10 @@
 <body>
   <header>
     <h1>Console d'administration</h1>
-    <button id="logout" hidden>Se déconnecter</button>
+    <div class="account" id="account" hidden>
+      <span id="whoami" class="muted"></span>
+      <button id="logout">Se déconnecter</button>
+    </div>
   </header>
 
   <main class="wide">
@@ -23,45 +26,223 @@
       </label>
       <button class="primary">Se connecter</button>
     </form>
+    <p id="notice" class="notice" hidden></p>
     <p id="error" class="error" hidden></p>
 
     <div id="dashboard" hidden>
-      <section class="card">
-        <h2>État des services</h2>
-        <div id="services" class="services"></div>
-      </section>
+      <nav class="tabs" role="tablist">
+        <button role="tab" data-tab="overview" aria-selected="true">Tableau de bord</button>
+        <button role="tab" data-tab="users">Utilisateurs</button>
+        <button role="tab" data-tab="jobs">Traitements</button>
+        <button role="tab" data-tab="logs">Journaux</button>
+      </nav>
 
-      <section class="tiles" id="tiles"></section>
+      <!-- Dashboard ---------------------------------------------------------------->
+      <section data-panel="overview">
+        <section class="card">
+          <h2>État des services</h2>
+          <div id="services" class="services"></div>
+        </section>
 
-      <section class="card">
-        <h2>Par type</h2>
-        <table id="by-type">
-          <thead><tr><th>Type</th><th>Réalisés</th><th>Non terminés</th><th>Échoués</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </section>
+        <div class="toolbar">
+          <span class="muted">Période</span>
+          <div class="segmented" id="period">
+            <button data-days="7">7 jours</button>
+            <button data-days="30" aria-pressed="true">30 jours</button>
+            <button data-days="90">90 jours</button>
+          </div>
+          <p id="metrics-error" class="error" hidden></p>
+        </div>
 
-      <section class="card">
-        <h2>Derniers traitements</h2>
-        <p id="jobs-error" class="error" hidden></p>
-        <div class="scroll">
-          <table id="jobs">
-            <thead><tr><th>Date</th><th>Fichier</th><th>Résultat</th><th>Langue</th><th>Modèle</th><th>Statut</th><th>Calcul</th><th>Réponse</th></tr></thead>
-            <tbody></tbody>
-          </table>
+        <section class="tiles" id="tiles"></section>
+
+        <div class="grid-2">
+          <section class="card chart-card">
+            <h2>Traitements par jour</h2>
+            <small>Selon le résultat final ; « autres » regroupe les traitements annulés ou pas encore terminés.</small>
+            <div id="chart-jobs"></div>
+          </section>
+          <section class="card chart-card">
+            <h2>Utilisateurs par jour</h2>
+            <small>Actifs : au moins un traitement demandé ce jour-là.</small>
+            <div id="chart-users"></div>
+          </section>
+          <section class="card chart-card">
+            <h2>Minutes traitées par jour</h2>
+            <small>Durée des médias transcrits, et temps de calcul passé dessus.</small>
+            <div id="chart-minutes"></div>
+          </section>
+          <section class="card chart-card">
+            <h2>Langues demandées</h2>
+            <small>Nombre de traitements par langue du résultat.</small>
+            <div id="chart-languages"></div>
+          </section>
+          <section class="card chart-card">
+            <h2>Types de résultat</h2>
+            <small>Nombre de traitements par type de résultat demandé.</small>
+            <div id="chart-outputs"></div>
+          </section>
+          <section class="card chart-card">
+            <h2>Modèles</h2>
+            <small>Traitements réussis sur la période.</small>
+            <div class="scroll">
+              <table id="models">
+                <thead><tr><th>Modèle</th><th class="num">Traitements</th><th class="num">Calcul moyen</th><th class="num">Calcul / durée</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </section>
         </div>
       </section>
 
-      <section class="card">
-        <h2>Journaux</h2>
-        <label class="inline">Fichier
-          <select id="log-file"></select>
-        </label>
-        <pre id="log" class="log"></pre>
+      <!-- Users ------------------------------------------------------------------->
+      <section data-panel="users" hidden>
+        <div class="toolbar">
+          <input id="user-search" type="search" placeholder="Rechercher par nom, nom affiché ou e-mail">
+          <button id="new-user" class="primary">Nouveau compte</button>
+        </div>
+        <section class="card">
+          <div class="scroll">
+            <table id="users" class="users">
+              <thead><tr>
+                <th>Utilisateur</th><th>Rôle</th><th>État</th><th>Connexion</th>
+                <th class="num">Traitements</th><th class="num">Calcul</th><th>Dernière connexion</th><th>Dernier traitement</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p id="users-empty" class="muted" hidden>Aucun compte ne correspond.</p>
+        </section>
+      </section>
+
+      <!-- Jobs -------------------------------------------------------------------->
+      <section data-panel="jobs" hidden>
+        <div class="toolbar">
+          <label class="muted">Statut
+            <select id="job-status">
+              <option value="">Tous</option>
+              <option value="queued">En attente</option>
+              <option value="processing">En cours</option>
+              <option value="done">Terminés</option>
+              <option value="failed">Échoués</option>
+              <option value="cancelled">Annulés</option>
+            </select>
+          </label>
+          <span id="job-user-filter" hidden>
+            <span class="badge" id="job-user-name"></span>
+            <button id="job-user-clear">Tous les utilisateurs</button>
+          </span>
+        </div>
+        <section class="card">
+          <p id="jobs-error" class="error" hidden></p>
+          <div class="scroll">
+            <table id="jobs">
+              <thead><tr><th>Date</th><th>Utilisateur</th><th>Fichier</th><th>Résultat</th><th>Langue</th><th>Modèle</th><th>Statut</th><th class="num">Calcul</th><th>Réponse</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <!-- Logs -------------------------------------------------------------------->
+      <section data-panel="logs" hidden>
+        <section class="card">
+          <h2>Journaux</h2>
+          <label class="inline">Fichier
+            <select id="log-file"></select>
+          </label>
+          <pre id="log" class="log"></pre>
+        </section>
       </section>
     </div>
   </main>
 
+  <!-- Account detail ------------------------------------------------------------>
+  <dialog id="user-dialog">
+    <div class="dialog-head">
+      <h2 id="ud-title"></h2>
+      <button id="ud-close" aria-label="Fermer">Fermer</button>
+    </div>
+    <div class="dialog-body">
+      <p id="ud-error" class="error" hidden></p>
+      <p class="muted" id="ud-subtitle"></p>
+      <div class="tiles" id="ud-tiles"></div>
+
+      <form id="ud-profile" class="card">
+        <h2>Profil et droits</h2>
+        <div class="form-grid two">
+          <label>Nom affiché <input id="ud-display-name" type="text" maxlength="64"></label>
+          <label>Adresse e-mail <input id="ud-email" type="email" maxlength="255"></label>
+          <label>Rôle
+            <select id="ud-role">
+              <option value="user">Utilisateur</option>
+              <option value="admin">Administrateur</option>
+            </select>
+          </label>
+          <label>État
+            <select id="ud-disabled">
+              <option value="false">Actif</option>
+              <option value="true">Désactivé (connexions fermées)</option>
+            </select>
+          </label>
+        </div>
+        <div class="actions"><button class="primary">Enregistrer</button></div>
+      </form>
+
+      <form id="ud-password" class="card">
+        <h2>Réinitialiser le mot de passe</h2>
+        <div class="form-grid two">
+          <label>Nouveau mot de passe
+            <input id="ud-new-password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+            <small>Communiquez-le à l'utilisateur : ses connexions en cours sont fermées.</small>
+          </label>
+        </div>
+        <div class="actions"><button>Réinitialiser</button></div>
+      </form>
+
+      <section class="card">
+        <h2>Derniers traitements</h2>
+        <div class="scroll"><table id="ud-history" class="history"></table></div>
+        <div class="actions"><button id="ud-all-jobs">Voir tous ses traitements</button></div>
+      </section>
+
+      <section class="card danger-zone">
+        <h2>Supprimer le compte</h2>
+        <p>Le compte, ses fichiers et son historique sont supprimés définitivement.</p>
+        <button id="ud-delete" class="danger">Supprimer ce compte</button>
+      </section>
+    </div>
+  </dialog>
+
+  <dialog id="new-user-dialog">
+    <div class="dialog-head">
+      <h2>Nouveau compte</h2>
+      <button id="nu-close" aria-label="Fermer">Fermer</button>
+    </div>
+    <form id="new-user-form" class="dialog-body">
+      <p id="nu-error" class="error" hidden></p>
+      <div class="form-grid two">
+        <label>Nom d'utilisateur
+          <input id="nu-username" type="text" autocapitalize="none" spellcheck="false" minlength="3" maxlength="32" required>
+        </label>
+        <label>Mot de passe initial
+          <input id="nu-password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+        </label>
+        <label>Nom affiché <input id="nu-display-name" type="text" maxlength="64"></label>
+        <label>Adresse e-mail <input id="nu-email" type="email" maxlength="255"></label>
+        <label>Rôle
+          <select id="nu-role">
+            <option value="user">Utilisateur</option>
+            <option value="admin">Administrateur</option>
+          </select>
+        </label>
+      </div>
+      <div class="actions"><button class="primary">Créer le compte</button></div>
+    </form>
+  </dialog>
+
+  <script src="shared/format.js"></script>
+  <script src="charts.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>

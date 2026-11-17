@@ -87,11 +87,63 @@ def create_user(session: Session, username: str, password: str, role: str = ROLE
     return user
 
 
+DISPLAY_NAME_MAX = 64
+EMAIL_PATTERN = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
+EMAIL_MAX = 255
+
+
+def validate_display_name(raw: str | None) -> str | None:
+    """Trimmed name, None when empty."""
+    name = " ".join((raw or "").split())
+    if len(name) > DISPLAY_NAME_MAX:
+        raise ValueError(f"Le nom affiché contient {DISPLAY_NAME_MAX} caractères au plus")
+    return name or None
+
+
+def validate_email(raw: str | None) -> str | None:
+    """Lowercase address, None when empty."""
+    email = (raw or "").strip().lower()
+    if not email:
+        return None
+    if len(email) > EMAIL_MAX or not EMAIL_PATTERN.fullmatch(email):
+        raise ValueError("Adresse e-mail invalide")
+    return email
+
+
+def set_password(user: User, password: str) -> None:
+    validate_password(password)
+    user.password_hash = hash_password(password)
+
+
+def end_sessions(session: Session, user: User, keep_token: str | None = None) -> None:
+    """Log the account out everywhere, except the browser holding `keep_token`."""
+    query = delete(AuthSession).where(AuthSession.user_id == user.id)
+    if keep_token:
+        query = query.where(AuthSession.id != _token_id(keep_token))
+    session.execute(query)
+
+
+def available_username(session: Session, wanted: str) -> str:
+    """A free, valid username close to `wanted` (for accounts created by single sign-on)."""
+    base = re.sub(r"[^a-z0-9._-]", "", normalize_username(wanted).replace(" ", "."))
+    base = base.lstrip("._-")[:28]
+    if len(base) < 3:
+        base = f"user{base}"
+    candidate, suffix = base, 1
+    while session.scalar(select(User.id).where(User.username == candidate)) is not None:
+        suffix += 1
+        candidate = f"{base[:28 - len(str(suffix))]}{suffix}"
+    return candidate
+
+
 def authenticate(
     session: Session, username: str, password: str, role: str | None = None
 ) -> User | None:
     user = session.scalar(select(User).where(User.username == normalize_username(username)))
-    valid = verify_password(user.password_hash if user else _DUMMY_HASH, password)
+    # A single sign-on account without a password is checked against the dummy hash too:
+    # same timing, and it can never match.
+    valid = verify_password(user.password_hash if user and user.password_hash else _DUMMY_HASH, password)
+    valid = valid and user is not None and user.password_hash is not None
     if user is None or not valid or user.disabled_at is not None or (role and user.role != role):
         return None
     user.last_login_at = utcnow()
@@ -204,8 +256,12 @@ def client_address(request: Request) -> str:
     return request.client.host if request.client else "?"
 
 
+def session_token(request: Request) -> str:
+    return request.cookies.get(USER_COOKIE, "")
+
+
 def current_user(request: Request, session: Session = Depends(get_session)) -> User:
-    user = user_for_token(session, request.cookies.get(USER_COOKIE, ""))
+    user = user_for_token(session, session_token(request))
     if user is None:
         raise HTTPException(401, "Connexion requise")
     return user

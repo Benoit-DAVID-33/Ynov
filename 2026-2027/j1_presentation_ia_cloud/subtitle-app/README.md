@@ -110,7 +110,8 @@ Voir le [manuel d'installation serveur](#manuel-dinstallation-serveur-administra
 
 1. **Se connecter** : à la première visite, « Créer un compte » (nom d'utilisateur et mot de
    passe de 8 caractères au moins) ; ensuite, « Se connecter ». Le mot de passe est stocké haché
-   (argon2) et ne peut pas être récupéré.
+   (argon2) et ne peut pas être récupéré. Ou bien **« Se connecter avec Keycloak »** (connexion
+   unique) : un compte est créé à la première connexion, sans mot de passe.
 2. **Déposer** un fichier : une barre indique l'avancement de l'envoi.
 3. **Choisir** le type de résultat, la langue (origine ou traduction) et le modèle. Pour une
    vidéo à sous-titres incrustés, choisir aussi la taille et la couleur des sous-titres : ils
@@ -127,6 +128,19 @@ Voir le [manuel d'installation serveur](#manuel-dinstallation-serveur-administra
    corrections sont reprises pour les autres résultats du même fichier dans la même langue.
 7. **Supprimer** : « Supprimer mon fichier » efface immédiatement le fichier et ses résultats
    du serveur.
+
+**Mon compte** (lien sur le nom d'utilisateur, en haut à droite) :
+
+- **vue d'ensemble** : traitements demandés et réussis, durée de média transcrit, temps de
+  calcul, espace occupé sur le serveur, derniers traitements ;
+- **historique** de tous ses traitements : fichier, type de résultat, langue, modèle, statut,
+  attente dans la file, temps de calcul et durée totale, téléchargement tant que le fichier
+  est conservé ;
+- **profil** : nom affiché et adresse e-mail (le nom d'utilisateur et le rôle ne sont pas
+  modifiables) ;
+- **sécurité** : changer (ou définir, pour un compte créé par Keycloak) son mot de passe, ce
+  qui ferme ses autres connexions ; associer ou dissocier son compte Keycloak ; supprimer
+  son compte, ses fichiers et son historique.
 
 Les sous-titres sont mis en forme sur deux lignes de 42 caractères au plus ; un passage plus
 long est réparti sur plusieurs sous-titres successifs.
@@ -287,9 +301,16 @@ passe). Les comptes sont en base, comme ceux des utilisateurs ; le premier est c
 worker sont arrêtés, et montre :
 
 - l'**état des services** : application, base de données, chaque worker, espace disque ;
-- l'**usage** : inférences réalisées, traitements non terminés et échoués (au total et par
-  type), temps de calcul moyen, rapport calcul / durée du média ;
-- les **derniers traitements** avec leur avancement et le contenu de chaque réponse ;
+- un **tableau de bord** sur 7, 30 ou 90 jours : comptes, utilisateurs actifs, traitements,
+  taux de réussite, attente et calcul (moyenne et 95e centile), fichiers conservés ; courbes
+  par jour (traitements, utilisateurs actifs et nouveaux comptes, minutes traitées),
+  répartition par langue, par type de résultat et par modèle ;
+- les **utilisateurs** : recherche, activité de chaque compte, fiche détaillée (historique,
+  chiffres), création d'un compte, rôle, désactivation, réinitialisation du mot de passe,
+  suppression. Un administrateur ne peut ni se rétrograder, ni se désactiver, ni se supprimer,
+  et le dernier administrateur actif est toujours conservé ;
+- les **traitements** de tous les utilisateurs (filtre par statut et par utilisateur), avec leur
+  avancement et le contenu de chaque réponse ;
 - les **journaux** de chaque service (`data/logs`), y compris ceux d'un service tombé.
 
 Cinq mots de passe erronés bloquent la connexion pendant une minute. La session dure
@@ -310,6 +331,18 @@ docker compose exec api python -m app.users disable alice         # et enable, l
 ```
 
 Changer un mot de passe ou désactiver un compte termine ses connexions en cours.
+
+### Connexion unique (Keycloak)
+
+Le service `keycloak` du compose est un fournisseur OpenID Connect prêt à l'emploi (mode
+développement) : realm `subtitle`, client `subtitle-app`, compte de démo `demo` /
+`demo-password`, inscription ouverte. Sa console est sur http://localhost:8080/admin (compte
+`admin` / `KEYCLOAK_ADMIN_PASSWORD`). L'application suit le flux « authorization code » avec
+PKCE ; un compte Keycloak est retrouvé par son identifiant (jamais par son adresse e-mail,
+qui ne permet donc pas de prendre la main sur un compte existant). Pour un autre fournisseur
+(Google, Microsoft Entra ID...), renseigner `OIDC_DISCOVERY_URL`, `OIDC_CLIENT_ID`,
+`OIDC_CLIENT_SECRET` et `OIDC_LABEL` (voir `.env.example`). Hors démonstration : Keycloak en
+mode production (HTTPS, base PostgreSQL), et un secret de client changé.
 
 ### Base de données
 

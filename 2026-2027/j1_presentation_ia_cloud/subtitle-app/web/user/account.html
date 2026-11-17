@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mon compte · Sous-titrage automatique</title>
+  <link rel="stylesheet" href="shared/style.css">
+</head>
+<body>
+  <header>
+    <h1><a href="/" class="home">Sous-titrage automatique</a></h1>
+    <div class="account">
+      <a href="/">Retour à l'application</a>
+      <button id="logout">Se déconnecter</button>
+    </div>
+  </header>
+
+  <main class="wide">
+    <p id="notice" class="notice" hidden></p>
+    <p id="error" class="error" hidden></p>
+
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="overview" aria-selected="true">Vue d'ensemble</button>
+      <button role="tab" data-tab="history">Historique</button>
+      <button role="tab" data-tab="profile">Profil</button>
+      <button role="tab" data-tab="security">Sécurité</button>
+    </nav>
+
+    <section data-panel="overview">
+      <div class="card identity">
+        <div class="avatar" id="avatar" aria-hidden="true"></div>
+        <div>
+          <h2 id="title"></h2>
+          <p class="muted" id="subtitle"></p>
+        </div>
+      </div>
+      <div class="tiles" id="tiles"></div>
+      <section class="card">
+        <h2>Derniers traitements</h2>
+        <div class="scroll"><table id="recent" class="history"></table></div>
+        <p class="muted" id="recent-empty" hidden>Aucun traitement pour l'instant : <a href="/">déposez un premier fichier</a>.</p>
+      </section>
+    </section>
+
+    <section data-panel="history" hidden>
+      <section class="card">
+        <h2>Historique de mes traitements</h2>
+        <p class="muted">Seul votre dernier fichier est conservé, et au plus 7 jours : les résultats plus anciens ne sont plus téléchargeables, mais restent dans l'historique.</p>
+        <div class="scroll"><table id="history" class="history"></table></div>
+        <div class="pager">
+          <button id="newer" disabled>Plus récents</button>
+          <span id="page" class="muted"></span>
+          <button id="older" disabled>Plus anciens</button>
+        </div>
+      </section>
+    </section>
+
+    <section data-panel="profile" hidden>
+      <form id="profile" class="card">
+        <h2>Profil</h2>
+        <div class="form-grid two">
+          <label>Nom d'utilisateur
+            <input id="username" type="text" disabled>
+            <small>Identifiant de connexion : il ne peut pas être modifié.</small>
+          </label>
+          <label>Rôle
+            <input id="role" type="text" disabled>
+          </label>
+          <label>Nom affiché
+            <input id="display-name" type="text" maxlength="64" autocomplete="name" placeholder="Prénom Nom">
+          </label>
+          <label>Adresse e-mail
+            <input id="email" type="email" maxlength="255" autocomplete="email" placeholder="vous@exemple.fr">
+          </label>
+        </div>
+        <dl class="facts" id="facts"></dl>
+        <div class="actions"><button class="primary">Enregistrer</button></div>
+      </form>
+    </section>
+
+    <section data-panel="security" hidden>
+      <form id="password" class="card">
+        <h2 id="password-title">Mot de passe</h2>
+        <p class="muted" id="password-help" hidden></p>
+        <div class="form-grid two">
+          <label id="current-label">Mot de passe actuel
+            <input id="current" type="password" autocomplete="current-password">
+          </label>
+          <label>Nouveau mot de passe
+            <input id="new" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+            <small>8 caractères au moins. Vos autres connexions seront fermées.</small>
+          </label>
+          <label>Confirmation
+            <input id="confirm" type="password" autocomplete="new-password" required>
+          </label>
+        </div>
+        <div class="actions"><button class="primary">Changer le mot de passe</button></div>
+      </form>
+
+      <section class="card" id="sso" hidden>
+        <h2>Connexion unique (<span class="sso-label"></span>)</h2>
+        <div id="sso-linked" hidden>
+          <p>Votre compte est associé à <span class="sso-label"></span><span id="sso-detail"></span> : vous pouvez vous connecter avec lui.</p>
+          <button id="unlink">Dissocier</button>
+        </div>
+        <div id="sso-unlinked" hidden>
+          <p class="muted">Associez votre compte <span class="sso-label"></span> pour vous connecter sans mot de passe.</p>
+          <a class="button primary" href="/api/auth/sso/login?mode=link">Associer mon compte <span class="sso-label"></span></a>
+        </div>
+      </section>
+
+      <form id="delete" class="card danger-zone">
+        <h2>Supprimer mon compte</h2>
+        <p>Votre compte, vos fichiers et tout votre historique sont supprimés définitivement. Cette action ne peut pas être annulée.</p>
+        <div class="form-grid two">
+          <label>Saisissez votre nom d'utilisateur pour confirmer
+            <input id="delete-confirm" type="text" autocapitalize="none" spellcheck="false" required>
+          </label>
+          <label id="delete-password-label">Mot de passe
+            <input id="delete-password" type="password" autocomplete="current-password">
+          </label>
+        </div>
+        <div class="actions"><button class="danger">Supprimer définitivement mon compte</button></div>
+      </form>
+    </section>
+  </main>
+
+  <script src="shared/format.js"></script>
+  <script src="account.js"></script>
+</body>
+</html>

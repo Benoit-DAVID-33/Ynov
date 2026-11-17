@@ -8,9 +8,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # What changes with the device. A GPU affords the bigger model and bigger
 # batches; on CPU the small model is the one that stays faster than real time
 # with 10 simultaneous users (measures in docs/ARCHITECTURE.md).
+# Burned-in subtitles are encoded on the CPU either way. On CPU, superfast leaves
+# the cores to the transcription (the 10-user target is missed with veryfast);
+# on GPU the cores are free, and medium at CRF 26 halves the file size.
 DEVICE_DEFAULTS = {
-    "cpu": {"default_model": "whisper-small.en", "batch_size": 8},
-    "gpu": {"default_model": "whisper-medium.en", "batch_size": 16},
+    "cpu": {"default_model": "whisper-small.en", "batch_size": 8,
+            "burn_preset": "superfast", "burn_crf": 23},
+    "gpu": {"default_model": "whisper-medium.en", "batch_size": 16,
+            "burn_preset": "medium", "burn_crf": 26},
 }
 
 
@@ -51,10 +56,13 @@ class Settings(BaseSettings):
     device: Literal["auto", "cpu", "gpu", "cuda"] = "auto"
     batch_size: int = 0  # 0 = chosen from the device
     cpu_threads: int = 0  # CPU inference only; 0 = library default
-    # x264 preset for burned-in subtitles: faster presets trade file size for speed.
-    # superfast is the slowest one that met the 10-user target on the CPU-only
-    # reference machine (see docs/ARCHITECTURE.md).
-    burn_preset: Literal["ultrafast", "superfast", "veryfast", "faster", "fast", "medium"] = "superfast"
+    # x264 preset and quality (CRF, higher = smaller and blurrier) for burned-in
+    # subtitles: faster presets trade file size for speed. Empty / 0 = chosen from
+    # the device, see DEVICE_DEFAULTS.
+    burn_preset: Literal[
+        "", "ultrafast", "superfast", "veryfast", "faster", "fast", "medium", "slow"
+    ] = ""
+    burn_crf: int = 0
 
     # Accounts. A login session lasts this many days; behind an HTTPS reverse proxy that
     # hides the scheme from the application, cookie_secure forces the Secure flag.
@@ -62,6 +70,17 @@ class Settings(BaseSettings):
     cookie_secure: bool = False
     # Accounts created per hour from one IP address (behind a proxy, everyone shares it).
     max_registrations_per_hour: int = 20
+    # Single sign-on with an OpenID Connect provider (Keycloak in docker-compose.yml; Google,
+    # Microsoft Entra ID... work the same way). Off while oidc_discovery_url is empty.
+    # The discovery URL is fetched by the server: inside Docker it uses the internal name of
+    # the provider, which publishes the address browsers must use for the login page.
+    oidc_discovery_url: str = ""
+    oidc_client_id: str = ""
+    oidc_client_secret: str = ""
+    # Short identifier stored with the linked accounts, and the name shown on the button.
+    oidc_provider: str = "keycloak"
+    oidc_label: str = "Keycloak"
+
     # Admin console (separate service). The first administrator account is created from
     # these two values when no administrator exists yet; later changes are ignored
     # (use `python -m app.users`). An empty password is replaced by a random one,
@@ -97,6 +116,18 @@ class Settings(BaseSettings):
     @property
     def effective_batch_size(self) -> int:
         return self.batch_size or self._device_defaults["batch_size"]
+
+    @property
+    def effective_burn_preset(self) -> str:
+        return self.burn_preset or self._device_defaults["burn_preset"]
+
+    @property
+    def effective_burn_crf(self) -> int:
+        return self.burn_crf or self._device_defaults["burn_crf"]
+
+    @property
+    def sso_enabled(self) -> bool:
+        return bool(self.oidc_discovery_url and self.oidc_client_id)
 
     @property
     def model_names(self) -> list[str]:

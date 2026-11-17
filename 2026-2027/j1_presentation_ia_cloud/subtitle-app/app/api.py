@@ -17,6 +17,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app import auth, jobs, media, retention
+from app.account_api import router as account_router
+from app.account_api import set_session_cookie
 from app.auth import current_user, current_user_id
 from app.config import Settings, get_settings
 from app.db import get_session, init_db
@@ -207,13 +209,6 @@ def _minutes(seconds: float) -> int:
     return int(seconds // 60)
 
 
-def _set_session_cookie(response: Response, request: Request, token: str, settings: Settings) -> None:
-    response.set_cookie(
-        auth.USER_COOKIE, token, max_age=int(settings.session_days * 24 * 3600), httponly=True,
-        samesite="lax", secure=settings.cookie_secure or request.url.scheme == "https",
-    )
-
-
 def _check_extension(filename: str) -> tuple[str, MediaKind]:
     extension = Path(filename).suffix.lower()
     kind = EXTENSIONS.get(extension)
@@ -303,6 +298,7 @@ def config(settings: Settings = Depends(get_settings)) -> dict:
         "allowed_outputs": {
             kind.value: [o.value for o in outputs] for kind, outputs in ALLOWED_OUTPUTS.items()
         },
+        "sso": {"enabled": settings.sso_enabled, "label": settings.oidc_label},
     }
 
 
@@ -333,7 +329,7 @@ def register(
         raise HTTPException(409, "Ce nom d'utilisateur est déjà pris") from exc
     token, _ = auth.open_session(session, user, settings.session_days * 24 * 3600)
     session.commit()
-    _set_session_cookie(response, request, token, settings)
+    set_session_cookie(response, request, token, settings)
     log.info("account '%s' created", user.username)
     return user
 
@@ -357,7 +353,7 @@ def login(
     auth.login_limiter.clear(address)
     token, _ = auth.open_session(session, user, settings.session_days * 24 * 3600)
     session.commit()
-    _set_session_cookie(response, request, token, settings)
+    set_session_cookie(response, request, token, settings)
     return user
 
 
@@ -674,6 +670,21 @@ def get_file(
     return _artifact_response(job, artifact, settings, inline=True)
 
 
+def revalidate_web_pages(app: FastAPI) -> None:
+    """Pages, scripts and styles are revalidated on every load (cheap: ETag, 304).
+
+    Without it, browsers keep an old app.js for days after an update, and run it against
+    the new API (seen with the translation targets).
+    """
+
+    @app.middleware("http")
+    async def no_cache(request: Request, call_next):
+        response = await call_next(request)
+        if not request.url.path.startswith("/api/") and "cache-control" not in response.headers:
+            response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
 def create_app() -> FastAPI:
     settings = get_settings()
     settings.storage_dir.mkdir(parents=True, exist_ok=True)
@@ -681,8 +692,10 @@ def create_app() -> FastAPI:
     init_db(settings.database_url)
     auth.registration_limiter.limit = settings.max_registrations_per_hour
 
-    app = FastAPI(title="Subtitle application", version="1.3.0")
+    app = FastAPI(title="Subtitle application", version="1.4.0")
     app.include_router(router)
+    app.include_router(account_router)
+    revalidate_web_pages(app)
     app.mount("/shared", StaticFiles(directory=WEB_DIR / "shared"), name="shared")
     app.mount("/", StaticFiles(directory=WEB_DIR / "user", html=True), name="web")
     log.info("api ready")

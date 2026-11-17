@@ -1,7 +1,9 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import JSON, BigInteger, CheckConstraint, ForeignKey, Index, String, Text
+from sqlalchemy import (
+    JSON, BigInteger, CheckConstraint, ForeignKey, Index, String, Text, UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -29,12 +31,42 @@ class User(Base):
     id: Mapped[str] = mapped_column(String(32), primary_key=True, default=new_id)
     # Lowercase, so that "Alice" and "alice" are the same account.
     username: Mapped[str] = mapped_column(String(32), unique=True)
-    password_hash: Mapped[str] = mapped_column(String(255))
+    # None for an account created through single sign-on that never set a password.
+    password_hash: Mapped[str | None] = mapped_column(String(255))
     role: Mapped[str] = mapped_column(String(16), default="user")
     created_at: Mapped[datetime] = mapped_column(default=utcnow)
     last_login_at: Mapped[datetime | None]
     # A disabled account cannot log in and its sessions stop working.
     disabled_at: Mapped[datetime | None]
+    # Profile, edited by the user; shown instead of the username when set.
+    display_name: Mapped[str | None] = mapped_column(String(64))
+    email: Mapped[str | None] = mapped_column(String(255))
+
+    identities: Mapped[list["UserIdentity"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan", passive_deletes=True,
+        order_by="UserIdentity.created_at",
+    )
+
+
+class UserIdentity(Base):
+    """An account of a single sign-on provider linked to a local account.
+
+    Found by (provider, subject), never by e-mail: an address claimed by the provider
+    must not hand over an existing local account.
+    """
+
+    __tablename__ = "user_identities"
+    __table_args__ = (UniqueConstraint("provider", "subject", name="uq_user_identities_provider_subject"),)
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    provider: Mapped[str] = mapped_column(String(32))
+    subject: Mapped[str] = mapped_column(String(255))
+    email: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)
+    last_login_at: Mapped[datetime | None]
+
+    user: Mapped[User] = relationship(back_populates="identities")
 
 
 class AuthSession(Base):

@@ -57,6 +57,14 @@ def test_explicit_settings_win_over_the_device_defaults():
     assert (custom.effective_default_model, custom.effective_batch_size) == ("whisper-small", 4)
 
 
+def test_burned_subtitles_encoding_follows_the_device():
+    cpu, gpu = _settings(device="cpu"), _settings(device="gpu")
+    assert (cpu.effective_burn_preset, cpu.effective_burn_crf) == ("superfast", 23)
+    assert (gpu.effective_burn_preset, gpu.effective_burn_crf) == ("medium", 26)
+    custom = _settings(device="gpu", burn_preset="veryfast", burn_crf=23)
+    assert (custom.effective_burn_preset, custom.effective_burn_crf) == ("veryfast", 23)
+
+
 def test_unknown_device_is_rejected():
     with pytest.raises(ValueError):
         _settings(device="tpu")

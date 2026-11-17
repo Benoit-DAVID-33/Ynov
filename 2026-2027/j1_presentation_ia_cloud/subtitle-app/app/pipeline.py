@@ -119,7 +119,8 @@ def _build_artifacts(
         media.burn_subtitles(
             source, srt, video,
             style=style,
-            preset=settings.burn_preset,
+            preset=settings.effective_burn_preset,
+            crf=settings.effective_burn_crf,
             duration_s=job.upload.duration_s,
             on_progress=progress.step("video"),
         )

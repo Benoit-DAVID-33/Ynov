@@ -381,6 +381,22 @@ environ 1,7 fois plus lourd ; `ultrafast` n'apporte presque rien de plus et trip
 L'encodeur matériel AMD n'est pas intéressant ici : plus lent en petite définition, et le
 décodage comme le rendu des sous-titres restent sur le processeur.
 
+Avec un GPU, la transcription ne prend plus les cœurs : l'encodage peut viser la taille du
+fichier. Mesure sur une vidéo de 149 s en 640×360 (15,4 Mo en entrée), un seul encodage,
+processeur de 20 cœurs :
+
+| Réglage | Taille | Temps |
+|---|---|---|
+| `superfast`, CRF 23 (défaut CPU) | 26,3 Mo | 2,5 s |
+| `veryfast`, CRF 23 | 15,3 Mo | 4,1 s |
+| `medium`, CRF 23 | 18,0 Mo | 7,6 s |
+| `medium`, CRF 26 (défaut GPU) | 13,8 Mo | 7,7 s |
+| `slow`, CRF 26 | 13,7 Mo | 10,0 s |
+
+`BURN_PRESET` et `BURN_CRF` vides suivent donc `DEVICE` : `superfast` / 23 sur CPU,
+`medium` / 26 sur GPU (fichier presque deux fois plus léger, encodage toujours environ 19 fois
+plus rapide que la durée de la vidéo).
+
 ### Cible serveur avec GPU
 
 Sur un GPU de classe T4 / L4 en float16, faster-whisper est donné pour plusieurs fois plus
