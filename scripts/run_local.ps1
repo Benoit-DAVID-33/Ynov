@@ -33,8 +33,9 @@ if (-not (Test-Path $python)) {
 if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
     throw "ffmpeg introuvable : winget install Gyan.FFmpeg"
 }
-if (-not (Test-Path "models\opus-mt-en-fr\model.bin")) {
-    Write-Warning "Pas de traduction : dossier models\opus-mt-en-fr absent (voir README, scripts\convert_translation_model.py)."
+$missing = @("fr", "es", "ru", "ar", "zh") | Where-Object { -not (Test-Path "models\opus-mt-en-$_\model.bin") }
+if ($missing) {
+    Write-Warning "Traduction indisponible vers : $($missing -join ', ') (modeles absents de models\, voir README, scripts\convert_translation_model.py)."
 }
 
 # Lance une commande externe en silence et dit si elle a reussi. (Avec

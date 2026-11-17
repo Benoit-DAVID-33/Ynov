@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     # Empty = chosen from the device, see DEVICE_DEFAULTS.
     default_model: str = ""
     # Comma-separated names from the translator registry.
-    enabled_translators: str = "opus-mt-en-fr"
+    enabled_translators: str = "opus-mt-en-fr,opus-mt-en-es,opus-mt-en-ru,opus-mt-en-ar,opus-mt-en-zh"
     translation_models_dir: Path = Path("./models")
     # Optional name from the speaker identifier registry.
     speaker_identifier: str = ""

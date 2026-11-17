@@ -1,9 +1,14 @@
+from pathlib import Path
+from types import SimpleNamespace
+
 from app import jobs, media, pipeline
+from app.config import get_settings
 from app.db import session_scope
 from app.domain import Segment
 from app.models import Job, Upload
 from app.transcription.fake import FakeTranscriber
 from app.translation import translate_segments
+from app.translation.opus_mt import OpusMT
 
 
 # --- progress ---------------------------------------------------------------
@@ -91,6 +96,45 @@ def test_sentence_split_over_several_subtitles_is_translated_as_a_whole():
     assert [(s.start, s.end, s.text) for s in result] == [
         (0, 2, "ONE TWO THREE FOUR"), (2, 3, "FIVE SIX."), (3, 4, "NEXT."),
     ]
+
+
+def test_chinese_translation_is_spread_by_characters():
+    segments = [Segment(0, 2, "We discuss the six"), Segment(2, 4, "official languages.")]
+    result = translate_segments(segments, lambda texts: ["我们讨论六种官方语言。"])
+    assert [s.text for s in result] == ["我们讨论六", "种官方语言。"]
+
+
+def test_the_six_un_languages_are_offered_when_their_models_are_installed(
+    client, settings, monkeypatch, tmp_path
+):
+    names = ["opus-mt-en-fr", "opus-mt-en-es", "opus-mt-en-ru", "opus-mt-en-ar", "opus-mt-en-zh"]
+    for name in names[:-1]:
+        (tmp_path / name).mkdir()
+        (tmp_path / name / "model.bin").write_bytes(b"")
+    monkeypatch.setenv("TRANSLATION_MODELS_DIR", str(tmp_path))
+    monkeypatch.setenv("ENABLED_TRANSLATORS", ",".join(names))
+    get_settings.cache_clear()
+    # Chinese is enabled but its model is missing: not offered.
+    assert client.get("/api/config").json()["translation_targets"] == ["ar", "es", "fr", "ru"]
+
+
+def test_target_language_token_is_put_before_each_sentence():
+    class Tokenizer:
+        def encode(self, text, out_type):
+            return text.split()
+
+        def decode(self, pieces):
+            return " ".join(pieces)
+
+    class Engine:
+        def translate_batch(self, batch, **kwargs):
+            self.batch = batch
+            return [SimpleNamespace(hypotheses=[["你好"]]) for _ in batch]
+
+    translator = OpusMT(Path("unused"), target_token=">>cmn_Hans<<")
+    translator._source, translator._target, translator._translator = Tokenizer(), Tokenizer(), Engine()
+    assert translator.translate(["Hello world"]) == ["你好"]
+    assert translator._translator.batch == [[">>cmn_Hans<<", "Hello", "world", "</s>"]]
 
 
 # --- subtitle style ---------------------------------------------------------

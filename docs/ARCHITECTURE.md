@@ -97,10 +97,12 @@ volume partagé. Vérifié en arrêtant brutalement l'application : la console l
 l'arrêt », ses journaux restent lisibles, puis elle repasse « en service » après la relance
 automatique.
 
-**Traduction locale en greffon.** Le français est produit par `opus-mt-en-fr`
-(Helsinki-NLP, Apache 2.0) converti pour CTranslate2 : même moteur que Whisper, pas de
-PyTorch à l'exécution, 80 Mo. Les sous-titres étant souvent des fragments de phrase, ils sont
-regroupés en phrases, traduits, puis redistribués sur les horodatages d'origine au prorata
+**Traduction locale en greffon.** Les cinq autres langues de l'ONU sont produites depuis
+l'anglais par des modèles OPUS-MT (Helsinki-NLP) convertis pour CTranslate2 : même moteur que
+Whisper, pas de PyTorch à l'exécution, 80 Mo par langue (235 Mo pour l'arabe). Les modèles
+arabe et chinois couvrent plusieurs variantes : un jeton `>>ara<<` ou `>>cmn_Hans<<` en tête
+de phrase choisit l'arabe standard et le mandarin simplifié. Les sous-titres étant souvent des
+fragments de phrase, ils sont regroupés en phrases, traduits, puis redistribués sur les horodatages d'origine au prorata
 des longueurs. L'interface `Translator` permet de brancher à la place le service de traduction
 du client.
 **Correction des sous-titres sans retranscrire.** Le texte corrigé par l'utilisateur est
@@ -222,9 +224,8 @@ autres utilisateurs à chaque dépôt, ce qui est incompatible avec 10 utilisate
   qui obtiendrait le cookie d'un autre y accéderait. À exposer en HTTPS.
 - Extensions limitées à `.mp4` / `.wav`, taille plafonnée (`MAX_UPLOAD_MB`), noms de fichiers
   jamais utilisés comme chemins.
-- Les fichiers déposés et produits ne sont pas purgés automatiquement : prévoir une rétention
-  selon le volume d'usage.
-- La traduction fournie va de l'anglais vers le français uniquement.
+- La traduction part de l'anglais uniquement (vers les cinq autres langues de l'ONU) : un
+  audio dans une autre langue ne peut être livré que dans sa langue d'origine.
 - La correction porte sur le texte, pas sur les horaires des sous-titres.
 - Traduction automatique généraliste : à relire avant diffusion (noms propres, expressions).
 - Les sous-titres incrustés sont figés dans l'image : leur style se choisit avant le

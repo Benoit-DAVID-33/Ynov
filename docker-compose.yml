@@ -19,7 +19,7 @@ x-app-env: &app-env
   DEVICE: ${DEVICE:-cpu}
   ENABLED_MODELS: ${ENABLED_MODELS:-whisper-medium.en,whisper-small.en,whisper-medium,whisper-small}
   DEFAULT_MODEL: ${DEFAULT_MODEL:-}
-  ENABLED_TRANSLATORS: ${ENABLED_TRANSLATORS:-opus-mt-en-fr}
+  ENABLED_TRANSLATORS: ${ENABLED_TRANSLATORS:-opus-mt-en-fr,opus-mt-en-es,opus-mt-en-ru,opus-mt-en-ar,opus-mt-en-zh}
   MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-2048}
   MAX_DURATION_S: ${MAX_DURATION_S:-7200}
   RETENTION_DAYS: ${RETENTION_DAYS:-7}

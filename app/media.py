@@ -5,7 +5,10 @@ import tempfile
 from collections.abc import Callable
 from pathlib import Path
 
-_ISO_639_2 = {"en": "eng", "fr": "fra", "es": "spa", "de": "deu", "it": "ita"}
+_ISO_639_2 = {
+    "en": "eng", "fr": "fra", "es": "spa", "ru": "rus", "ar": "ara", "zh": "zho",
+    "de": "deu", "it": "ita",
+}
 
 # libass font sizes for burned-in subtitles (its default is 16).
 FONT_SIZES = {"small": 13, "medium": 18, "large": 26}

@@ -10,8 +10,9 @@ suit l'avancement, consulte le résultat dans son navigateur et le télécharge.
 | Audio `.wav`   |     |     | oui | oui |
 
 L'audio peut être en français, en anglais ou dans une autre langue (modèles multilingues, langue
-détectée automatiquement). Chaque résultat peut être livré dans la langue d'origine ou traduit de
-l'anglais vers le français.
+détectée automatiquement). Chaque résultat peut être livré dans la langue d'origine ou, pour un
+audio en anglais, traduit dans les autres langues officielles de l'ONU : français, espagnol,
+russe, arabe et chinois.
 
 Tout tourne sur votre infrastructure : transcription et traduction sont exécutées localement,
 aucune donnée n'est envoyée à un service tiers. Les choix techniques, le dimensionnement et
@@ -68,9 +69,8 @@ et journaux dans `.\data`.
    .venv\Scripts\python -m pip install -r requirements-gpu.txt
    ```
 
-3. Préparer le modèle de traduction (une seule fois, voir
-   [Traduction](#traduction-en-français)). Sans lui, tout fonctionne mais la traduction n'est
-   pas proposée.
+3. Préparer les modèles de traduction (une seule fois, voir [Traduction](#traduction)). Sans
+   eux, tout fonctionne mais la traduction n'est pas proposée.
 4. Lancer, sur CPU ou sur GPU (sans `-Device`, le GPU est pris s'il y en a un) :
 
    ```bash
@@ -102,7 +102,7 @@ Voir le [manuel d'installation serveur](#manuel-dinstallation-serveur-administra
 ## Utilisation
 
 1. **Déposer** un fichier : une barre indique l'avancement de l'envoi.
-2. **Choisir** le type de résultat, la langue (origine ou français) et le modèle. Pour une
+2. **Choisir** le type de résultat, la langue (origine ou traduction) et le modèle. Pour une
    vidéo à sous-titres incrustés, choisir aussi la taille et la couleur des sous-titres : ils
    font partie de l'image et ne peuvent plus être modifiés ensuite.
 3. **Suivre** le traitement : position dans la file, puis barre de progression avec l'étape en
@@ -149,10 +149,21 @@ dans la console d'administration.
 Un fichier court n'attend pas derrière un fichier long : voir
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#traitements-simultanés-et-voie-rapide).
 
-## Traduction en français
+## Traduction
 
-La traduction utilise le modèle libre `Helsinki-NLP/opus-mt-en-fr` (Apache 2.0), exécuté
-localement. Il doit être converti une fois au format du moteur d'inférence ; cette étape a
+La traduction part de l'anglais vers les cinq autres langues officielles de l'ONU, avec des
+modèles libres Helsinki-NLP exécutés localement :
+
+| Langue | Modèle | Licence |
+|---|---|---|
+| Français | `Helsinki-NLP/opus-mt-en-fr` | Apache 2.0 |
+| Espagnol | `Helsinki-NLP/opus-mt-en-es` | Apache 2.0 |
+| Russe | `Helsinki-NLP/opus-mt-en-ru` | Apache 2.0 |
+| Arabe | `Helsinki-NLP/opus-mt-tc-big-en-ar` | CC BY 4.0 |
+| Chinois (simplifié) | `Helsinki-NLP/opus-mt-en-zh` | Apache 2.0 |
+
+Pour l'arabe, le modèle « tc-big », plus gros, remplace `opus-mt-en-ar`, nettement moins bon.
+Les modèles doivent être convertis une fois au format du moteur d'inférence ; cette étape a
 besoin de PyTorch, que l'application n'utilise pas, d'où un environnement séparé :
 
 ```bash
@@ -167,8 +178,17 @@ python -m venv .venv-convert
 .venv-convert\Scripts\python scripts\convert_translation_model.py
 ```
 
-Le modèle (≈ 80 Mo) est écrit dans `models\opus-mt-en-fr` ; `.venv-convert` peut ensuite être
-supprimé. Avec Docker, cette conversion est faite pendant la construction de l'image.
+Les modèles (≈ 80 Mo chacun, 235 Mo pour l'arabe) sont écrits dans `models\` ; un modèle déjà
+converti est sauté. `scripts\convert_translation_model.py opus-mt-en-es` n'en prépare qu'un.
+`.venv-convert` peut ensuite être supprimé. Avec Docker, cette conversion est faite pendant la
+construction de l'image. Une langue dont le modèle est absent n'est simplement pas proposée.
+
+Seul un audio en anglais peut être traduit. Pour un audio dans une autre langue, seule la
+langue d'origine est disponible ; demander une traduction fait échouer le traitement.
+
+Le chinois s'écrit sans espaces : il est coupé entre les caractères, deux fois plus larges à
+l'écran, soit 21 caractères par ligne au plus. L'arabe s'affiche de droite à gauche dans
+l'éditeur et le lecteur ; l'image Docker contient les polices nécessaires à l'incrustation.
 
 Les sous-titres sont traduits phrase par phrase puis redécoupés sur les horodatages
 d'origine. La qualité est celle d'un modèle de traduction généraliste compact : correcte pour
