@@ -35,8 +35,14 @@ function setProgress(id, percent, label) {
   show(box);
 }
 
+function toLogin() {
+  location.replace("/login.html");
+  return new Promise(() => {}); // the page is being replaced: stop the caller here
+}
+
 async function api(path, options) {
   const response = await fetch(`/api${path}`, options);
+  if (response.status === 401) return toLogin();
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     throw new Error(typeof body.detail === "string" ? body.detail : `Erreur ${response.status}`);
@@ -141,6 +147,7 @@ async function sendFile(file) {
       await sleep(Math.min(1000 * 2 ** failures, 15000));
       continue;
     }
+    if (answer.status === 401) return toLogin();
     if (answer.status === 200 || answer.status === 409) {
       // 409: the server already has other bytes than expected; it says where it stands.
       offset = answer.data.received_bytes;
@@ -430,6 +437,24 @@ function restoreCueStyle() {
   applyCueStyle();
 }
 
+// Burned-in subtitle style, remembered on this browser like the player style.
+function rememberBurnStyle() {
+  const style = { size: $("burn-size").value, color: $("burn-color").value };
+  try {
+    localStorage.setItem("burnStyle", JSON.stringify(style));
+  } catch { /* storage unavailable: the choice just is not remembered */ }
+}
+
+function restoreBurnStyle() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("burnStyle"));
+    if (saved) {
+      $("burn-size").value = saved.size;
+      $("burn-color").value = saved.color;
+    }
+  } catch { /* nothing saved */ }
+}
+
 function reset() {
   clearTimeout(pollTimer);
   upload = null;
@@ -440,6 +465,9 @@ function reset() {
 
 async function init() {
   try {
+    const me = await api("/auth/me");
+    $("username").textContent = me.username;
+    show($("account"));
     config = await api("/config");
   } catch (e) {
     return fail(`Service indisponible : ${e.message}`);
@@ -462,6 +490,10 @@ async function init() {
     handleFile(e.dataTransfer.files[0]);
   };
   $("start").onclick = startJob;
+  $("logout").onclick = async () => {
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    location.replace("/login.html");
+  };
   $("reset").onclick = reset;
   $("cancel").onclick = cancelJob;
   $("delete").onclick = deleteUpload;
@@ -477,6 +509,9 @@ async function init() {
   $("cue-size").oninput = applyCueStyle;
   $("cue-color").oninput = applyCueStyle;
   restoreCueStyle();
+  $("burn-size").onchange = rememberBurnStyle;
+  $("burn-color").oninput = rememberBurnStyle;
+  restoreBurnStyle();
   $("limits").textContent =
     `Vidéo .mp4 ou audio .wav · ${Math.round(config.max_duration_s / 60)} min et ${formatSize(config.max_upload_mb)} maximum`;
   restoreLastUpload();

@@ -22,7 +22,7 @@ case "${1:-cpu}" in
   *)    echo "Usage : $0 cpu|gpu|stop|logs" >&2; exit 2 ;;
 esac
 
-[ -f .env ] || { echo "Fichier .env absent : copiez .env.example en .env et renseignez POSTGRES_PASSWORD et ADMIN_PASSWORD." >&2; exit 1; }
+[ -f .env ] || echo "Pas de fichier .env : valeurs par défaut (mot de passe de base 'subtitle', mot de passe administrateur généré et affiché une fois par 'docker compose logs admin'). Pour un serveur, copiez .env.example en .env et renseignez les secrets." >&2
 
 if [ "$DEVICE" = gpu ]; then
   # Vérifie que Docker voit le GPU avant de construire une image de plusieurs Go.
@@ -39,5 +39,5 @@ docker compose $FILES up -d --build
 echo
 echo "Matériel       : $DEVICE"
 echo "Application    : http://localhost:8000"
-echo "Administration : http://localhost:8001 (mot de passe : ADMIN_PASSWORD du fichier .env)"
+echo "Administration : http://localhost:8001 (compte ADMIN_USERNAME, 'admin' par défaut ; mot de passe ADMIN_PASSWORD, ou généré : docker compose logs admin)"
 echo "État           : docker compose ps        Journaux : $0 logs"

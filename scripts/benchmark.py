@@ -4,9 +4,13 @@
 
 Requirement: every job must finish in less time than the duration of the media,
 i.e. the "x durée" column must stay below 1.
+
+Each simulated user creates its own account (bench-<run>-<n>), so the server must allow
+that many registrations from this address: MAX_REGISTRATIONS_PER_HOUR >= --users.
 """
 
 import argparse
+import secrets
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -15,8 +19,12 @@ from pathlib import Path
 import httpx
 
 
-def run_user(base_url: str, path: Path, output_type: str, model: str | None) -> dict:
+def run_user(base_url: str, path: Path, output_type: str, model: str | None, username: str) -> dict:
     with httpx.Client(base_url=base_url, timeout=600) as client:
+        account = client.post(
+            "/api/auth/register", json={"username": username, "password": secrets.token_urlsafe(16)}
+        )
+        account.raise_for_status()
         started = time.perf_counter()
         with path.open("rb") as stream:
             upload = client.post("/api/uploads", files={"file": (path.name, stream)})
@@ -41,10 +49,11 @@ def main() -> int:
     parser.add_argument("--model", default=None)
     args = parser.parse_args()
 
+    run = secrets.token_hex(3)
     with ThreadPoolExecutor(args.users) as pool:
         futures = [
-            pool.submit(run_user, args.url, args.file, args.output_type, args.model)
-            for _ in range(args.users)
+            pool.submit(run_user, args.url, args.file, args.output_type, args.model, f"bench-{run}-{n}")
+            for n in range(args.users)
         ]
         results = [f.result() for f in futures]
 

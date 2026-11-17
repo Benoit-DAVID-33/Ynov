@@ -1,8 +1,16 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
+from pathlib import Path
 
-from sqlalchemy import create_engine, event, inspect, text
+from alembic import command
+from alembic.config import Config
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+
+MIGRATIONS_DIR = Path(__file__).resolve().parent / "migrations"
+# Services start together and each one upgrades the schema: the first takes this
+# lock, the others wait and then find nothing left to do.
+_MIGRATION_LOCK = 4_172_001
 
 
 class Base(DeclarativeBase):
@@ -13,45 +21,33 @@ _engine = None
 _session_factory: sessionmaker[Session] | None = None
 
 
+def alembic_config() -> Config:
+    config = Config()
+    config.set_main_option("script_location", str(MIGRATIONS_DIR))
+    return config
+
+
+def migrate(engine) -> None:
+    """Bring the schema to the latest revision (see app/migrations)."""
+    with engine.begin() as connection:
+        connection.execute(text("SELECT pg_advisory_xact_lock(:key)"), {"key": _MIGRATION_LOCK})
+        config = alembic_config()
+        config.attributes["connection"] = connection
+        command.upgrade(config, "head")
+
+
 def init_db(url: str) -> None:
     global _engine, _session_factory
+    if not url.startswith("postgresql"):
+        raise ValueError("DATABASE_URL doit être une URL PostgreSQL (postgresql+psycopg://...)")
     if _engine is not None:
         _engine.dispose()
-    connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
-    _engine = create_engine(url, connect_args=connect_args, pool_pre_ping=True)
-    if url.startswith("sqlite"):
-        # WAL: the API keeps reading while the workers write.
-        @event.listens_for(_engine, "connect")
-        def _use_wal(connection, _record):
-            connection.execute("PRAGMA journal_mode=WAL")
-            connection.execute("PRAGMA busy_timeout=15000")
+    _engine = create_engine(url, pool_pre_ping=True)
     _session_factory = sessionmaker(_engine, expire_on_commit=False)
 
     from app import models  # noqa: F401  (register tables)
 
-    Base.metadata.create_all(_engine)
-    _add_missing_columns(_engine)
-
-
-def _add_missing_columns(engine) -> None:
-    """Upgrade a database created by an earlier version, keeping its data.
-
-    Only handles what the application needs so far: new columns that are
-    nullable or have a constant default. Anything beyond that calls for a
-    real migration tool (Alembic).
-    """
-    inspector = inspect(engine)
-    with engine.begin() as connection:
-        for table in Base.metadata.sorted_tables:
-            existing = {column["name"] for column in inspector.get_columns(table.name)}
-            for column in table.columns:
-                if column.name in existing:
-                    continue
-                ddl = f"ALTER TABLE {table.name} ADD COLUMN {column.name} " \
-                      f"{column.type.compile(engine.dialect)}"
-                if not column.nullable:
-                    ddl += f" DEFAULT {column.default.arg!r} NOT NULL"
-                connection.execute(text(ddl))
+    migrate(_engine)
 
 
 @contextmanager

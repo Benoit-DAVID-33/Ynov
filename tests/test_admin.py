@@ -1,10 +1,14 @@
+from fastapi.testclient import TestClient
+
 from app import jobs, media
+from app.config import get_settings
 from app.db import session_scope
-from tests.conftest import PASSWORD
+from app.models import User, utcnow
+from tests.conftest import ADMIN_USERNAME, PASSWORD, USER_PASSWORD
 
 
-def _login(admin_client, password=PASSWORD):
-    return admin_client.post("/api/login", json={"password": password})
+def _login(admin_client, password=PASSWORD, username=ADMIN_USERNAME):
+    return admin_client.post("/api/login", json={"username": username, "password": password})
 
 
 def test_everything_but_the_login_page_requires_a_session(admin_client):
@@ -79,19 +83,78 @@ def test_overview_reports_services_and_usage(admin_client, submit, run_worker, m
 
 
 def test_console_stays_usable_when_the_database_is_down(admin_client, settings, monkeypatch):
+    (settings.logs_dir / "worker-host.log").write_text("worker crashed\n", encoding="utf-8")
+    _login(admin_client)
+
     def unreachable(url):
         raise OSError("connection refused")
 
     monkeypatch.setattr("app.admin.init_db", unreachable)
     monkeypatch.setattr("app.admin._db_ready", False)
-    (settings.logs_dir / "worker-host.log").write_text("worker crashed\n", encoding="utf-8")
 
-    _login(admin_client)
+    # Already logged in: the session is still honoured, the database parts report the outage.
     overview = admin_client.get("/api/overview").json()
     assert overview["database"]["up"] is False
     assert overview["stats"] is None
     assert admin_client.get("/api/jobs").status_code == 503
     assert admin_client.get("/api/logs/worker-host.log").json()["lines"] == ["worker crashed"]
+
+    # A new login needs the database: it says so instead of failing as a bad password.
+    other = TestClient(admin_client.app)
+    assert _login(other).status_code == 503
+    assert other.get("/api/overview").status_code == 401
+
+
+def test_only_administrators_can_log_in(admin_client, client):
+    assert _login(admin_client, USER_PASSWORD, username="alice").status_code == 401
+    assert admin_client.get("/api/overview").status_code == 401
+
+
+def test_a_user_session_does_not_open_the_console(admin_client, client):
+    token = client.cookies["session"]
+    admin_client.cookies.set("admin_session", token)
+    assert admin_client.get("/api/overview").status_code == 401
+
+
+def test_first_administrator_is_created_from_the_settings_once(admin_client, settings, monkeypatch):
+    assert _login(admin_client).status_code == 200
+    with session_scope() as session:
+        admins = session.query(User).filter_by(role="admin").all()
+        assert [a.username for a in admins] == ["admin"]
+        assert admins[0].password_hash != PASSWORD and admins[0].password_hash.startswith("$argon2")
+        assert admins[0].last_login_at is not None
+
+    # An administrator exists: other values of the settings create nothing more.
+    monkeypatch.setenv("ADMIN_USERNAME", "second")
+    get_settings.cache_clear()
+    admin_client.post("/api/logout")
+    monkeypatch.setattr("app.admin._db_ready", False)
+    assert _login(admin_client).status_code == 200
+    with session_scope() as session:
+        assert session.query(User).filter_by(role="admin").count() == 1
+
+
+def test_missing_admin_password_generates_one_printed_once(client, settings, capsys):
+    from app import auth
+
+    no_password = settings.model_copy(update={"admin_password": ""})
+    with session_scope() as session:
+        auth.ensure_admin(session, no_password)
+    printed = capsys.readouterr().err
+    password = printed.split("le mot de passe ")[1].split()[0]
+    with session_scope() as session:
+        assert auth.authenticate(session, "admin", password, role="admin") is not None
+        auth.ensure_admin(session, no_password)  # an administrator exists: nothing more
+    assert "mot de passe" not in capsys.readouterr().err
+
+
+def test_disabling_the_administrator_ends_their_session(admin_client):
+    _login(admin_client)
+    assert admin_client.get("/api/overview").status_code == 200
+    with session_scope() as session:
+        session.query(User).filter_by(role="admin").one().disabled_at = utcnow()
+    assert admin_client.get("/api/overview").status_code == 401
+    assert _login(admin_client).status_code == 401
 
 
 def test_logs_are_listed_and_tailed(admin_client, settings):

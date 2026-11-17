@@ -1,6 +1,6 @@
 """Automatic deletion of uploaded and produced files.
 
-Each visitor keeps the files of their latest upload only. Database rows are
+Each user keeps the files of their latest upload only. Database rows are
 kept: the admin statistics and the text of past answers stay available.
 """
 
