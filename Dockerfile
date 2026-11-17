@@ -45,5 +45,7 @@ ENV PYTHONUNBUFFERED=1 \
     TRANSLATION_MODELS_DIR=/translation \
     DEVICE=${DEVICE}
 
+LABEL org.opencontainers.image.title="subtitle-app"       org.opencontainers.image.description="Subtitle application: user API, admin console and worker (one image, three commands)"       com.ynov.subtitle.component="application"
+
 EXPOSE 8000 8001
 CMD ["uvicorn", "app.api:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]

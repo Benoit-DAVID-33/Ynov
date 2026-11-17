@@ -59,7 +59,7 @@ function renderServices(overview) {
   ];
   if (overview.workers.length === 0) pills.push(pill("Worker", false, "Aucun worker enregistré"));
   for (const worker of overview.workers) {
-    const device = { cuda: " (GPU)", cpu: " (CPU)" }[worker.device] ?? "";
+    const device = { cuda: " (GPU)", cpu: " (CPU)", triton: " (Triton)" }[worker.device] ?? "";
     pills.push(pill(`Worker ${worker.id}${device}`, worker.up, `Dernier signal : ${fmt.date(worker.heartbeat_at)}`));
   }
   pills.push(el("span", { className: "pill", textContent: `Disque : ${overview.disk.free_gb.toFixed(0)} Go libres sur ${overview.disk.total_gb.toFixed(0)}` }));

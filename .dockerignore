@@ -1,6 +1,7 @@
 *
 !app
 !web
+!triton
 !requirements.txt
 !requirements-ml.txt
 !requirements-gpu.txt

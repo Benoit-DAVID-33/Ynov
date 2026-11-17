@@ -21,14 +21,15 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app import accounts, auth
+from app import accounts, auth, metrics
 from app.api import WEB_DIR, job_fields, revalidate_web_pages
 from app.config import Settings, get_settings
 from app.db import init_db, session_scope
 from app.domain import JobStatus
 from app.logs import setup_logging
 from app.models import Job, Upload, User, Worker, utcnow
-from app.stats import metrics, usage_stats
+from app.stats import metrics as activity_metrics
+from app.stats import usage_stats
 
 log = logging.getLogger("admin")
 
@@ -255,7 +256,7 @@ def list_jobs(
 
 @private.get("/metrics")
 def get_metrics(days: int = 30, session: Session = Depends(db_session)) -> dict:
-    return metrics(session, days)
+    return activity_metrics(session, days)
 
 
 # --- accounts -------------------------------------------------------------------
@@ -399,6 +400,10 @@ def create_app() -> FastAPI:
     app.include_router(public)
     app.include_router(private)
     revalidate_web_pages(app)
+    metrics.instrument_http(app, "admin")
+    # Queue, workers, accounts and storage, read from the database at each scrape.
+    metrics.register_database_collector(settings)
+    metrics.serve(settings, "admin")
     app.mount("/shared", StaticFiles(directory=WEB_DIR / "shared"), name="shared")
     app.mount("/", StaticFiles(directory=WEB_DIR / "admin", html=True), name="web")
     log.info("admin console ready")

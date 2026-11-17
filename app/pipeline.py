@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from app import media, subtitles
+from app import media, metrics, subtitles
 from app.config import Settings
 from app.domain import MediaKind, OutputType, Segment
 from app.models import Job
@@ -68,14 +68,17 @@ def delivered_language(target: str | None, source: str) -> str:
 def _transcribe(job: Job, workdir: Path, settings: Settings, on_progress) -> tuple[str, list[Segment]]:
     source = Path(job.upload.path)
     audio = workdir / "audio.wav"
-    media.extract_audio(source, audio)
+    backend = settings.inference_backend
+    with metrics.timed_stage("audio", "ffmpeg"):
+        media.extract_audio(source, audio)
     try:
         transcriber = get_transcriber(job.model)
-        if transcriber.thread_safe:
-            result = transcriber.transcribe(audio, on_progress)
-        else:
-            with _inference_lock:
+        with metrics.timed_stage("transcription", backend):
+            if transcriber.thread_safe:
                 result = transcriber.transcribe(audio, on_progress)
+            else:
+                with _inference_lock:
+                    result = transcriber.transcribe(audio, on_progress)
         segments = result.segments
         if settings.speaker_identifier:
             with _inference_lock:
@@ -172,15 +175,17 @@ def run_job(
     else:
         if job.target_language and job.target_language != language:
             translator = get_translator(language, job.target_language)
-            translated = translate_segments(
-                segments, translator.translate, progress.step("translation")
-            )
+            with metrics.timed_stage("translation", settings.inference_backend):
+                translated = translate_segments(
+                    segments, translator.translate, progress.step("translation")
+                )
         delivered = translated if translated is not None else segments
 
-    files = _build_artifacts(
-        job, delivered_language(job.target_language, language), delivered, workdir, settings,
-        progress,
-    )
+    with metrics.timed_stage("files", "ffmpeg"):
+        files = _build_artifacts(
+            job, delivered_language(job.target_language, language), delivered, workdir, settings,
+            progress,
+        )
     artifacts = [
         {"name": f.name, "media_type": MEDIA_TYPES[f.suffix], "primary": index == 0}
         for index, f in enumerate(files)

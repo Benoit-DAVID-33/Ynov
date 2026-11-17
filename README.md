@@ -25,6 +25,15 @@ La solution est faite de deux sites distincts, sans lien de l'un vers l'autre :
 | Application | <http://localhost:8000> | Utilisateurs, avec un compte (création ouverte à tous) |
 | Console d'administration | <http://localhost:8001> | Administrateur, avec un compte de rôle `admin` |
 
+Avec Docker s'ajoutent les services d'exploitation :
+
+| Service | Adresse par défaut | Rôle |
+|---|---|---|
+| Keycloak | <http://localhost:8080> | Connexion unique (SSO) |
+| Grafana | <http://localhost:3000> | Tableau de bord d'exploitation (compte `admin`) |
+| Prometheus | <http://localhost:9090> (cette machine seulement) | Collecte des métriques |
+| Triton (GPU) | `localhost:8100` HTTP, `8101` gRPC, `8102` métriques (cette machine seulement) | Serveur d'inférence |
+
 ## Deux façons de lancer, sur CPU ou sur GPU
 
 | | Sans Docker (poste de développement) | Avec Docker (serveur, démonstration) |
@@ -265,7 +274,23 @@ Sans les scripts : `docker compose up -d --build` (CPU), ou
 `DEVICE=gpu docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d --build` (GPU).
 
 Une seule image sert aux trois services (application, console, worker) ; seule la commande
-change. N'exposer que le port 8000 aux utilisateurs ; réserver le port 8001 au réseau
+change. Toutes les images du projet portent le préfixe `subtitle-` et la version de leur
+base dans leur tag, avec leur configuration intégrée (pas de fichier monté depuis le disque) :
+
+| Image | Construite depuis | Contenu |
+|---|---|---|
+| `subtitle-app:cpu` / `:gpu` | `Dockerfile` | application, console, worker (même image, trois commandes) |
+| `subtitle-triton:25.06` | `triton/Dockerfile` | serveur d'inférence (GPU) |
+| `subtitle-db:16` | `db/` | PostgreSQL 16 |
+| `subtitle-keycloak:26.0.7` | `keycloak/` | Keycloak avec le realm `subtitle` |
+| `subtitle-prometheus:3.5.0` | `observability/prometheus/` | Prometheus avec ses cibles |
+| `subtitle-grafana:12.1.1` | `observability/grafana/` | Grafana avec la source de données et le tableau de bord |
+
+L'image Triton ne garde que le backend Python, selon la méthode `compose.py` de NVIDIA : 18,6 Go
+sur le disque au lieu de 32,7 Go avec l'image officielle complète (voir
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)). Sa construction a besoin de l'image complète
+`tritonserver:25.06-py3` (11 Go à télécharger) ; une fois l'image construite, celle-ci peut
+être supprimée (`docker rmi nvcr.io/nvidia/tritonserver:25.06-py3`). N'exposer que le port 8000 aux utilisateurs ; réserver le port 8001 au réseau
 d'administration, derrière un reverse proxy HTTPS.
 
 ### Arrêter
@@ -293,6 +318,64 @@ Relancer la commande de démarrage (même `-Device`).
 
 Passer de `cpu` à `gpu` (ou l'inverse) : relancer avec l'autre valeur, les données sont
 conservées.
+
+### Serveur d'inférence (Triton)
+
+En version GPU, les modèles ne tournent plus dans le worker mais dans un serveur
+d'inférence dédié, [NVIDIA Triton](https://github.com/triton-inference-server/server) : seul
+le service `triton` reçoit le GPU. Le worker garde la file, ffmpeg et les fichiers ; il envoie
+l'audio et le texte à Triton en gRPC. En version CPU (ou sans Docker), les modèles restent
+dans le worker (`INFERENCE_BACKEND=local`).
+
+```
+navigateur ─► api ─► PostgreSQL ◄─ worker ──gRPC──► triton (GPU)
+                                                     ├─ whisper_medium_en, whisper_small_en,
+                                                     │  whisper_medium, whisper_small,
+                                                     │  whisper_large_v3_turbo
+                                                     └─ translator (anglais → fr, es, ru, ar, zh)
+```
+
+- **Dépôt de modèles** : `triton/model_repository`, un dossier par modèle avec son
+  `config.pbtxt` (entrées, sorties, instance GPU, paramètres). Les modèles utilisent le backend
+  Python de Triton avec le moteur CTranslate2 (faster-whisper, OPUS-MT) : mêmes poids, mêmes
+  performances qu'avant, code commun dans `triton/backend/subtitle_models`.
+- **Transcription en flux** : les modèles Whisper sont en mode `decoupled` ; Triton renvoie
+  chaque segment de sous-titre dès qu'il est décodé (barre de progression), et un traitement
+  annulé arrête la requête entre deux segments. Plusieurs requêtes partagent les mêmes poids
+  sur le GPU, chacune dans son fil.
+- **Chargement des modèles** : `--model-control-mode=explicit`. Le traducteur et le modèle
+  par défaut (`TRITON_PRELOAD_MODEL`, `whisper_medium_en`) démarrent avec le serveur ; un autre
+  Whisper est chargé à la première demande d'un utilisateur, ce qui ménage la mémoire du GPU.
+  Les poids Whisper sont dans le volume `models`, les traducteurs dans l'image ; le
+  traducteur est préchauffé au chargement (le premier appel GPU coûte une quinzaine de
+  secondes).
+- **Vérifier le serveur sans l'application** (client gRPC, comme dans le TP) :
+
+  ```bash
+  curl localhost:8100/v2/health/ready
+  python scripts/triton_check.py input.mp4 --to fr   # santé, modèles, transcription, traduction
+  ```
+
+Mesure sur la vidéo de démonstration (149 s, RTX 5070 Ti) : transcription en 8,7 s
+(× 0,06), traitement complet avec traduction et incrustation en 21,5 s, contre 36,6 s quand
+le modèle tournait dans le worker.
+
+### Observabilité (Prometheus, Grafana)
+
+Chaque service publie ses métriques Prometheus sur le réseau interne (port 9100, jamais
+exposé) : l'application (requêtes HTTP par route, latence), le worker (traitements par
+résultat, durée, durée de chaque étape) et la console (état lu en base : file d'attente,
+workers, comptes, stockage). Triton publie les siennes (requêtes, latence et file par modèle,
+mémoire GPU). Prometheus les collecte toutes les 15 s et les garde 15 jours
+(`PROMETHEUS_RETENTION`) ; les workers sont découverts par DNS, y compris avec
+`docker compose up --scale worker=N`.
+
+Grafana (<http://localhost:3000>, compte `admin` / `GRAFANA_ADMIN_PASSWORD`) ouvre directement
+le tableau de bord « Sous-titrage : application et inférence », intégré à l'image
+`subtitle-grafana` depuis `observability/grafana` (modifier le JSON, puis
+`docker compose up -d --build grafana`) : vue d'ensemble (file, workers, taux de réussite, état de Triton et
+de la base), traitements, serveur d'inférence, API. Sous WSL 2 (Docker Desktop), Triton ne
+remonte pas l'utilisation du GPU (NVIDIA DCGM y est limité) ; la mémoire GPU, elle, est juste.
 
 ### Console d'administration
 
@@ -519,6 +602,11 @@ résultat arrive en moins de temps que la durée du média (attente dans la file
 ```
 app/
   api.py            application utilisateur : API HTTP + interface web
+  account_api.py    « Mon compte » et connexion unique (routes)
+  accounts.py       comptes vus par leur titulaire et par l'administrateur
+  sso.py            client OpenID Connect (Keycloak)
+  metrics.py        métriques Prometheus des services
+  triton_client.py  connexion au serveur d'inférence Triton (gRPC)
   auth.py           comptes : hachage argon2, sessions, limitation des tentatives
   users.py          gestion des comptes en ligne de commande (python -m app.users)
   admin.py          console d'administration (service séparé)
@@ -535,12 +623,19 @@ app/
   logs.py           journaux par service
   transcription/    modèles de transcription (greffons)
   translation/      traducteurs (greffons)
+triton/
+  Dockerfile        image du serveur d'inférence (tritonserver + modèles)
+  model_repository/ un dossier par modèle Triton : config.pbtxt + 1/model.py
+  backend/          code des modèles (backend Python de Triton)
+observability/      images Prometheus (cibles) et Grafana (tableau de bord)
+keycloak/           image Keycloak et realm importé au premier démarrage
+db/                 image PostgreSQL du projet
 web/
   user/             interface utilisateur
   admin/            console d'administration
-  shared/           feuille de style commune
+  shared/           feuille de style et mise en forme communes
 tests/              tests automatisés
 scripts/            lancement local ou Docker (CPU / GPU), conversion du modèle de traduction,
-                    test de charge
+                    test de charge, vérification du serveur Triton
 test_pipeline_3.py  prototype d'origine, conservé pour référence
 ```

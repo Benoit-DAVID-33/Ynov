@@ -1,0 +1,28 @@
+# Whisper "large-v3-turbo" (faster-whisper / CTranslate2, float16 on GPU).
+# Decoupled: one streamed response per subtitle segment, see subtitle_models/whisper.py.
+name: "whisper_large_v3_turbo"
+backend: "python"
+max_batch_size: 0
+model_transaction_policy { decoupled: true }
+
+input [
+  { name: "AUDIO", data_type: TYPE_INT16, dims: [ -1 ] }
+]
+output [
+  { name: "LANGUAGE", data_type: TYPE_STRING, dims: [ 1 ] },
+  { name: "START", data_type: TYPE_FP32, dims: [ 1 ] },
+  { name: "END", data_type: TYPE_FP32, dims: [ 1 ] },
+  { name: "TEXT", data_type: TYPE_STRING, dims: [ 1 ] }
+]
+
+# One copy of the weights on the GPU; requests share it, each in its own thread.
+instance_group [ { count: 1, kind: KIND_GPU } ]
+
+parameters [
+  { key: "whisper_model", value: { string_value: "large-v3-turbo" } },
+  # "" = detected from the audio
+  { key: "language", value: { string_value: "" } },
+  # 30-second windows decoded together (more = faster, more GPU memory).
+  { key: "batch_size", value: { string_value: "16" } },
+  { key: "max_concurrent_requests", value: { string_value: "4" } }
+]

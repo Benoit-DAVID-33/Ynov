@@ -1,0 +1,5 @@
+# Inference runtime of the Triton models (Python backend), installed in the Triton image.
+# CTranslate2 uses the CUDA 12 / cuDNN 9 libraries that ship with tritonserver:25.06.
+faster-whisper>=1.1,<2
+ctranslate2>=4.5,<5
+sentencepiece>=0.2

@@ -1,3 +1,5 @@
 # Worker only: transcription and translation model runtime.
 faster-whisper>=1.1,<2
 sentencepiece>=0.2
+# Client of the Triton inference server (INFERENCE_BACKEND=triton).
+tritonclient[grpc]>=2.50,<3

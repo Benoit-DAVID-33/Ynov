@@ -425,3 +425,83 @@ l'ordre de 0,75 €/h, soit environ 6 600 €/an allumée en continu, plus le st
 plafond de 10 000 €/an. Arrêter l'instance hors heures ouvrées (≈ 50 h/semaine) ramène la
 facture à environ 2 000 €/an. Tarif indicatif à confirmer sur la grille du fournisseur retenu
 avant la soutenance.
+
+## Serveur d'inférence (Triton) et observabilité
+
+En version GPU, l'inférence est sortie du worker vers un serveur dédié, NVIDIA Triton
+Inference Server (`triton/`, `docker-compose.gpu.yml`).
+
+**Pourquoi un serveur d'inférence.** Dans le worker, chaque processus chargeait sa propre copie
+des modèles et réclamait le GPU : ajouter un worker doublait la mémoire GPU, et l'inférence ne
+pouvait pas évoluer à part du reste (file, ffmpeg, fichiers). Avec Triton, un seul processus
+possède le GPU et les poids ; les workers deviennent légers (sans GPU) et se multiplient
+librement. Triton apporte aussi ce qu'on attend en production : un contrat d'interface par
+modèle (`config.pbtxt`), le chargement et déchargement des modèles à chaud, des sondes de
+santé (`/v2/health/ready`) et des métriques Prometheus par modèle.
+
+**Choix du backend.** Le backend Python de Triton, avec le même moteur CTranslate2 que
+l'application (faster-whisper, OPUS-MT), plutôt qu'une conversion de Whisper en TensorRT :
+mêmes poids et mêmes résultats, sans le coût d'une conversion propre à chaque GPU, pour des
+performances déjà largement suffisantes (× 0,06 de la durée sur RTX 5070 Ti). La version
+25.06 de Triton est la première série compilée avec CUDA 12.9 : elle prend en charge les GPU
+Blackwell (RTX 50xx) tout en gardant les bibliothèques CUDA 12 / cuDNN 9 dont CTranslate2
+a besoin.
+
+**Contrats des modèles.**
+
+| Modèle | Entrées | Sorties | Mode |
+|---|---|---|---|
+| `whisper_*` (5 variantes) | `AUDIO` INT16 [-1] (PCM 16 kHz mono) | `LANGUAGE`, puis par segment `START`, `END`, `TEXT` | decoupled (flux) |
+| `translator` | `TEXT` BYTES [-1], `TARGET` BYTES [1] | `TRANSLATION` BYTES [-1] | requête / réponse |
+
+L'audio est envoyé en entiers 16 bits plutôt qu'en flottants : deux fois moins de données
+(230 Mo pour 2 h). Les cinq traducteurs partagent un seul modèle Triton, donc un seul
+processus et un seul contexte CUDA (environ 2 Go de mémoire GPU économisés). Le mode
+`decoupled` de Whisper garde la barre de progression et l'annulation, qu'un appel unique
+aurait perdues.
+
+**Mesures** (vidéo de 149 s, RTX 5070 Ti, `whisper_medium_en`) :
+
+| | Modèle dans le worker | Triton |
+|---|---|---|
+| Transcription seule | – | 8,7 s (× 0,06) |
+| Traitement complet (traduction fr + incrustation) | 36,6 s | 21,5 s |
+| Chargement d'un autre Whisper à la demande | – | 15 s, une fois |
+
+**Observabilité.** Chaque service publie ses métriques sur un port interne (9100) : requêtes
+HTTP par route (et non par URL, pour borner le nombre de séries), traitements par résultat,
+durée totale et par étape, et un état lu en base au moment de la collecte (file d'attente,
+workers, comptes, stockage), juste quel que soit le worker qui a travaillé. Prometheus
+collecte ces métriques et celles de Triton ; Grafana les présente dans un tableau de bord
+provisionné. Pour Whisper, Triton ne mesure que la prise en charge des requêtes en flux : la
+durée réelle de transcription vient de la mesure du worker (étape `transcription`).
+
+**Limites connues.**
+
+- Sous WSL 2 (Docker Desktop), Triton ne remonte pas l'utilisation du GPU (DCGM limité).
+- Le chargement de modèles par l'API de Triton est ouvert à tout client du réseau interne : en
+  production, restreindre ces protocoles (`--grpc-restricted-protocol`) au seul worker.
+- L'image Triton reste lourde (18,6 Go) : voir ci-dessous.
+
+**Taille de l'image Triton.** L'image officielle `tritonserver:25.06-py3` embarque tous les
+backends (TensorRT, PyTorch, ONNX Runtime, OpenVINO, DALI...) : 31 Go sur le disque, alors
+que seul le backend Python sert. `triton/Dockerfile` suit la méthode `compose.py` de NVIDIA
+(dépôt `triton-inference-server/server`, branche `r25.06`) : partir de l'image minimale
+`tritonserver:25.06-py3-min` et n'y copier, depuis l'image complète, que le cœur de Triton
+et le backend Python. Deux écarts au fichier généré : les outils de compilation (clang, git)
+ne sont pas installés, et de DCGM (métriques GPU, lié au cœur de Triton) seules la
+bibliothèque et ses modules sont copiés (15 Mo) au lieu du paquet complet (plus de 2 Go de
+proxies cuBLAS et de suite de diagnostic).
+
+| Image | Sur le disque |
+|---|---|
+| Triton officielle complète + nos modèles | 32,7 Go |
+| Triton réduite au backend Python + nos modèles | 18,6 Go (−43 %) |
+
+Le reste vient de l'image minimale elle-même (16,5 Go, dont 7,7 Go de bibliothèques CUDA
+et 1 Go d'outils de profilage). Aller plus loin demanderait de partir d'une image CUDA nue
+(`nvidia/cuda:12.9.1-cudnn-runtime`, 3,2 Go compressés) en y recopiant à la main les
+dépendances du cœur de Triton : environ 9 Go, mais un assemblage à revalider à chaque
+version de Triton. vLLM n'est pas une alternative ici : image aussi lourde (10,5 Go
+compressés, PyTorch), pensé pour les LLM génératifs, sans prise en charge des traducteurs
+OPUS-MT (Marian) ni du flux de segments horodatés dont les sous-titres ont besoin.

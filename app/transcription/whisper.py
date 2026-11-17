@@ -7,6 +7,17 @@ from app.domain import Segment, Transcription
 from app.transcription.base import Transcriber, register_transcriber
 
 
+def read_pcm16(path: Path):
+    """Samples of a 16 kHz mono 16-bit wav, as int16 (what is sent to Triton)."""
+    import numpy as np
+
+    with wave.open(str(path), "rb") as wav:
+        if wav.getsampwidth() != 2 or wav.getnchannels() != 1 or wav.getframerate() != 16000:
+            raise ValueError("Audio attendu : wav 16 kHz mono 16 bits")
+        frames = wav.readframes(wav.getnframes())
+    return np.frombuffer(frames, dtype=np.int16)
+
+
 def _read_wav(path: Path):
     """Samples of a 16-bit mono wav as float32 in [-1, 1].
 
@@ -15,11 +26,7 @@ def _read_wav(path: Path):
     """
     import numpy as np
 
-    with wave.open(str(path), "rb") as wav:
-        if wav.getsampwidth() != 2 or wav.getnchannels() != 1 or wav.getframerate() != 16000:
-            raise ValueError("Audio attendu : wav 16 kHz mono 16 bits")
-        frames = wav.readframes(wav.getnframes())
-    return np.frombuffer(frames, dtype=np.int16).astype(np.float32) / 32768.0
+    return read_pcm16(path).astype(np.float32) / 32768.0
 
 
 class FasterWhisper(Transcriber):
@@ -70,11 +77,28 @@ class FasterWhisper(Transcriber):
         return Transcription(self.language or info.language, segments)
 
 
+def _whisper(model_id: str, language: str | None):
+    """Same model in the worker process or on the Triton server, per INFERENCE_BACKEND.
+
+    The Triton model name is the registry name with "." and "-" turned into "_"
+    (triton/model_repository/whisper_medium_en, ...).
+    """
+
+    def factory() -> Transcriber:
+        if get_settings().inference_backend == "triton":
+            from app.transcription.triton import TritonWhisper
+
+            return TritonWhisper(f"whisper_{model_id.replace('.', '_').replace('-', '_')}")
+        return FasterWhisper(model_id, language)
+
+    return factory
+
+
 # English-only models: a little more accurate on English than the multilingual
 # ones of the same size.
-register_transcriber("whisper-medium.en", lambda: FasterWhisper("medium.en", "en"))
-register_transcriber("whisper-small.en", lambda: FasterWhisper("small.en", "en"))
+register_transcriber("whisper-medium.en", _whisper("medium.en", "en"))
+register_transcriber("whisper-small.en", _whisper("small.en", "en"))
 # Multilingual models: French, English and the other Whisper languages.
-register_transcriber("whisper-small", lambda: FasterWhisper("small", None))
-register_transcriber("whisper-medium", lambda: FasterWhisper("medium", None))
-register_transcriber("whisper-large-v3-turbo", lambda: FasterWhisper("large-v3-turbo", None))
+register_transcriber("whisper-small", _whisper("small", None))
+register_transcriber("whisper-medium", _whisper("medium", None))
+register_transcriber("whisper-large-v3-turbo", _whisper("large-v3-turbo", None))

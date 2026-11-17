@@ -44,10 +44,13 @@ x-app-env: &app-env
   OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-subtitle-dev-secret}
   OIDC_PROVIDER: ${OIDC_PROVIDER:-keycloak}
   OIDC_LABEL: ${OIDC_LABEL:-Keycloak}
+  # Prometheus metrics of each service, on the internal network only (never published).
+  METRICS_PORT: 9100
 
 services:
   db:
-    image: postgres:16-alpine
+    image: subtitle-db:16
+    build: ./db
     restart: unless-stopped
     environment:
       POSTGRES_USER: subtitle
@@ -127,10 +130,11 @@ services:
 
   # Single sign-on (OpenID Connect). Development mode: HTTP, built-in database in the
   # keycloak volume. The realm "subtitle" (client subtitle-app, account demo /
-  # demo-password) is imported at the first start from keycloak/realm-subtitle.json.
+  # demo-password) is built into the image (keycloak/) and imported at the first start.
   # Administration: KEYCLOAK_URL/admin, account admin / KEYCLOAK_ADMIN_PASSWORD.
   keycloak:
-    image: quay.io/keycloak/keycloak:26.0.7
+    image: subtitle-keycloak:26.0.7
+    build: ./keycloak
     restart: unless-stopped
     command:
       - start-dev
@@ -147,11 +151,45 @@ services:
     ports:
       - "${KEYCLOAK_PORT:-8080}:8080"
     volumes:
+      # The realm file is in the image (data/import): Docker copies it into a new volume.
       - keycloak:/opt/keycloak/data
-      - ./keycloak/realm-subtitle.json:/opt/keycloak/data/import/realm-subtitle.json:ro
+
+  # Observability: Prometheus scrapes the metrics of every service (and of Triton in
+  # GPU mode), Grafana shows them on a provisioned dashboard.
+  #   Grafana     http://localhost:3000  (admin / GRAFANA_ADMIN_PASSWORD)
+  #   Prometheus  http://localhost:9090  (this machine only)
+  prometheus:
+    image: subtitle-prometheus:3.5.0
+    build: ./observability/prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-15d}
+    volumes:
+      - prometheus:/prometheus
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+
+  grafana:
+    image: subtitle-grafana:12.1.1
+    build: ./observability/grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+    volumes:
+      - grafana:/var/lib/grafana
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    depends_on:
+      - prometheus
 
 volumes:
   db:
   data:
   models:
   keycloak:
+  prometheus:
+  grafana:

@@ -1,0 +1,18 @@
+# OPUS-MT translators from English (CTranslate2), one model for the five targets.
+name: "translator"
+backend: "python"
+max_batch_size: 0
+
+input [
+  { name: "TEXT", data_type: TYPE_STRING, dims: [ -1 ] },
+  { name: "TARGET", data_type: TYPE_STRING, dims: [ 1 ] }
+]
+output [
+  { name: "TRANSLATION", data_type: TYPE_STRING, dims: [ -1 ] }
+]
+
+instance_group [ { count: 1, kind: KIND_GPU } ]
+
+parameters [
+  { key: "models_dir", value: { string_value: "/opt/translation" } }
+]
