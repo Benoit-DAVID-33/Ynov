@@ -432,6 +432,24 @@ function restoreCueStyle() {
   applyCueStyle();
 }
 
+// Burned-in subtitle style, remembered on this browser like the player style.
+function rememberBurnStyle() {
+  const style = { size: $("burn-size").value, color: $("burn-color").value };
+  try {
+    localStorage.setItem("burnStyle", JSON.stringify(style));
+  } catch { /* storage unavailable: the choice just is not remembered */ }
+}
+
+function restoreBurnStyle() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("burnStyle"));
+    if (saved) {
+      $("burn-size").value = saved.size;
+      $("burn-color").value = saved.color;
+    }
+  } catch { /* nothing saved */ }
+}
+
 function reset() {
   clearTimeout(pollTimer);
   upload = null;
@@ -486,6 +504,9 @@ async function init() {
   $("cue-size").oninput = applyCueStyle;
   $("cue-color").oninput = applyCueStyle;
   restoreCueStyle();
+  $("burn-size").onchange = rememberBurnStyle;
+  $("burn-color").oninput = rememberBurnStyle;
+  restoreBurnStyle();
   $("limits").textContent =
     `Vidéo .mp4 ou audio .wav · ${Math.round(config.max_duration_s / 60)} min et ${formatSize(config.max_upload_mb)} maximum`;
   restoreLastUpload();
