@@ -33,7 +33,17 @@ x-app-env: &app-env
   MAX_REGISTRATIONS_PER_HOUR: ${MAX_REGISTRATIONS_PER_HOUR:-20}
   MAX_PENDING_MEDIA_S: ${MAX_PENDING_MEDIA_S:-14400}
   MAX_PENDING_JOBS_PER_VISITOR: ${MAX_PENDING_JOBS_PER_VISITOR:-4}
-  BURN_PRESET: ${BURN_PRESET:-superfast}
+  # Empty / 0 = chosen from DEVICE (cpu: superfast, CRF 23; gpu: medium, CRF 26).
+  BURN_PRESET: ${BURN_PRESET:-}
+  BURN_CRF: ${BURN_CRF:-0}
+  # Single sign-on through the keycloak service below. The server reads the discovery
+  # document on the internal network; Keycloak publishes KEYCLOAK_URL for the browsers.
+  # OIDC_DISCOVERY_URL empty = password login only.
+  OIDC_DISCOVERY_URL: ${OIDC_DISCOVERY_URL-http://keycloak:8080/realms/subtitle/.well-known/openid-configuration}
+  OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-subtitle-app}
+  OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-subtitle-dev-secret}
+  OIDC_PROVIDER: ${OIDC_PROVIDER:-keycloak}
+  OIDC_LABEL: ${OIDC_LABEL:-Keycloak}
 
 services:
   db:
@@ -115,7 +125,33 @@ services:
       api:
         condition: service_healthy
 
+  # Single sign-on (OpenID Connect). Development mode: HTTP, built-in database in the
+  # keycloak volume. The realm "subtitle" (client subtitle-app, account demo /
+  # demo-password) is imported at the first start from keycloak/realm-subtitle.json.
+  # Administration: KEYCLOAK_URL/admin, account admin / KEYCLOAK_ADMIN_PASSWORD.
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.7
+    restart: unless-stopped
+    command:
+      - start-dev
+      - --import-realm
+      - --http-port=8080
+      # Browsers use this address; the application reaches http://keycloak:8080
+      # (back-channel URLs follow the address of each request).
+      - --hostname=${KEYCLOAK_URL:-http://localhost:8080}
+      - --hostname-backchannel-dynamic=true
+      - --health-enabled=true
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+    ports:
+      - "${KEYCLOAK_PORT:-8080}:8080"
+    volumes:
+      - keycloak:/opt/keycloak/data
+      - ./keycloak/realm-subtitle.json:/opt/keycloak/data/import/realm-subtitle.json:ro
+
 volumes:
   db:
   data:
   models:
+  keycloak:

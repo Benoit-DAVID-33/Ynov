@@ -100,6 +100,7 @@ def burn_subtitles(
     dest: Path,
     style: dict | None = None,
     preset: str = "superfast",
+    crf: int = 23,
     duration_s: float | None = None,
     on_progress: Callable[[float], None] = lambda fraction: None,
 ) -> None:
@@ -108,7 +109,7 @@ def burn_subtitles(
     _run_ffmpeg_with_progress(
         ["ffmpeg", "-y", "-i", str(video.resolve()),
          "-vf", f"subtitles={srt.name}{_force_style(style)}",
-         "-c:v", "libx264", "-preset", preset, "-crf", "23", "-c:a", "copy",
+         "-c:v", "libx264", "-preset", preset, "-crf", str(crf), "-c:a", "copy",
          str(dest.resolve())],
         duration_s,
         on_progress,

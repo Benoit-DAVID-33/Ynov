@@ -10,6 +10,23 @@ function fail(message) {
 // Already logged in: nothing to do here.
 fetch("/api/auth/me").then((response) => { if (response.ok) location.replace("/"); });
 
+// Single sign-on button, when a provider is configured.
+fetch("/api/config")
+  .then((response) => (response.ok ? response.json() : null))
+  .then((config) => {
+    if (!config?.sso?.enabled) return;
+    for (const label of document.querySelectorAll(".sso-label")) label.textContent = config.sso.label;
+    $("sso").hidden = false;
+  })
+  .catch(() => {});
+
+// Error sent back by the single sign-on flow (?error=...).
+const returned = new URLSearchParams(location.search).get("error");
+if (returned) {
+  fail(returned);
+  history.replaceState(null, "", location.pathname);
+}
+
 form.onsubmit = async (event) => {
   event.preventDefault();
   $("error").hidden = true;

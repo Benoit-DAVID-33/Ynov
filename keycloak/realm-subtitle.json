@@ -1,0 +1,45 @@
+{
+  "realm": "subtitle",
+  "displayName": "Sous-titrage automatique",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "resetPasswordAllowed": false,
+  "rememberMe": true,
+  "internationalizationEnabled": true,
+  "supportedLocales": ["fr", "en"],
+  "defaultLocale": "fr",
+  "clients": [
+    {
+      "clientId": "subtitle-app",
+      "name": "Application de sous-titrage",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "subtitle-dev-secret",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:8000/api/auth/sso/callback", "http://127.0.0.1:8000/api/auth/sso/callback"],
+      "webOrigins": ["http://localhost:8000", "http://127.0.0.1:8000"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:8000/*"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "demo",
+      "email": "demo@example.org",
+      "emailVerified": true,
+      "firstName": "Camille",
+      "lastName": "Démo",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "demo-password", "temporary": false }]
+    }
+  ]
+}
