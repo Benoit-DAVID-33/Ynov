@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app import auth, jobs, media, retention
+from app import auth, jobs, media, metrics, retention
 from app.account_api import router as account_router
 from app.account_api import set_session_cookie
 from app.auth import current_user, current_user_id
@@ -696,6 +696,8 @@ def create_app() -> FastAPI:
     app.include_router(router)
     app.include_router(account_router)
     revalidate_web_pages(app)
+    metrics.instrument_http(app, "api")
+    metrics.serve(settings, "api")
     app.mount("/shared", StaticFiles(directory=WEB_DIR / "shared"), name="shared")
     app.mount("/", StaticFiles(directory=WEB_DIR / "user", html=True), name="web")
     log.info("api ready")

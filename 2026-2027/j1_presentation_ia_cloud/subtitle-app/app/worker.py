@@ -8,7 +8,7 @@ import socket
 import threading
 import time
 
-from app import auth, jobs, pipeline, retention
+from app import auth, jobs, metrics, pipeline, retention
 from app.config import Settings, get_settings
 from app.db import init_db, session_scope
 from app.device import compute_type, resolve_device
@@ -78,6 +78,10 @@ class _ProgressWriter:
             raise JobCancelled
 
 
+def _labels(job: Job | None) -> tuple[str, str]:
+    return (job.output_type, job.model) if job is not None else ("?", "?")
+
+
 def process_next(settings: Settings, max_duration_s: float | None = None) -> bool:
     """Process one queued job. Returns False when there is none to take."""
     with session_scope() as session:
@@ -86,6 +90,7 @@ def process_next(settings: Settings, max_duration_s: float | None = None) -> boo
         return False
 
     started = time.perf_counter()
+    job = None
     try:
         # Short-lived session: no transaction stays open during the inference.
         with session_scope() as session:
@@ -96,10 +101,12 @@ def process_next(settings: Settings, max_duration_s: float | None = None) -> boo
             result = pipeline.run_job(job, cached, settings, _ProgressWriter(job_id))
     except JobCancelled:
         log.info("job %s cancelled", job_id)
+        metrics.JOBS.labels(*_labels(job), "cancelled").inc()
         shutil.rmtree(settings.results_dir / job_id, ignore_errors=True)
         return True
     except Exception as exc:
         log.exception("job %s failed", job_id)
+        metrics.JOBS.labels(*_labels(job), "failed").inc()
         with session_scope() as session:
             jobs.mark_failed(session, job_id, str(exc) or type(exc).__name__,
                              time.perf_counter() - started)
@@ -123,6 +130,8 @@ def process_next(settings: Settings, max_duration_s: float | None = None) -> boo
         log.info("job %s cancelled", job_id)
         shutil.rmtree(settings.results_dir / job_id, ignore_errors=True)
         return True
+    metrics.JOBS.labels(job.output_type, job.model, "done").inc()
+    metrics.JOB_DURATION.labels(job.output_type, job.model).observe(time.perf_counter() - started)
     log.info("job %s done in %.1fs", job_id, compute_s)
     return True
 
@@ -151,14 +160,21 @@ def main() -> None:
     signal.signal(signal.SIGTERM, lambda *_: stop.set())
     signal.signal(signal.SIGINT, lambda *_: stop.set())
 
-    try:
-        device = resolve_device(settings)
-    except RuntimeError as exc:
-        # GPU explicitly requested but unusable: stop rather than run slowly on CPU.
-        log.error("%s", exc)
-        raise SystemExit(1) from exc
-    log.info("device: %s (%s), default model: %s", device, compute_type(device),
-             settings.effective_default_model)
+    if settings.inference_backend == "triton":
+        # The models run on the inference server: this process needs no GPU.
+        device = "triton"
+        log.info("inference: Triton at %s, default model: %s", settings.triton_url,
+                 settings.effective_default_model)
+    else:
+        try:
+            device = resolve_device(settings)
+        except RuntimeError as exc:
+            # GPU explicitly requested but unusable: stop rather than run slowly on CPU.
+            log.error("%s", exc)
+            raise SystemExit(1) from exc
+        log.info("device: %s (%s), default model: %s", device, compute_type(device),
+                 settings.effective_default_model)
+    metrics.serve(settings, "worker")
 
     try:
         # Load the default model up front so the first job is not slowed down.

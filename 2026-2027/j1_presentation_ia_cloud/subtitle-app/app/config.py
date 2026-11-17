@@ -51,8 +51,15 @@ class Settings(BaseSettings):
     translation_models_dir: Path = Path("./models")
     # Optional name from the speaker identifier registry.
     speaker_identifier: str = ""
-    # Where the models run. "auto" uses an NVIDIA GPU when one is usable; "gpu"
-    # requires one and fails clearly otherwise.
+    # Where the models run. "local": in the worker process (CPU, or a GPU given to the
+    # worker). "triton": on the Triton inference server at triton_url (gRPC), the
+    # worker then only sends audio and text and never loads a model.
+    inference_backend: Literal["local", "triton"] = "local"
+    triton_url: str = "triton:8001"
+    # Longest wait for the next answer of the server (a segment, a translation).
+    triton_timeout_s: float = 600.0
+    # Device of the local backend. "auto" uses an NVIDIA GPU when one is usable;
+    # "gpu" requires one and fails clearly otherwise.
     device: Literal["auto", "cpu", "gpu", "cuda"] = "auto"
     batch_size: int = 0  # 0 = chosen from the device
     cpu_threads: int = 0  # CPU inference only; 0 = library default
@@ -89,6 +96,10 @@ class Settings(BaseSettings):
     admin_password: str = ""
     # Where the admin console probes the user-facing API.
     api_url: str = "http://localhost:8000"
+
+    # Prometheus metrics of the service on this port (/metrics), 0 = off. Meant for the
+    # internal network only: never publish it.
+    metrics_port: int = 0
 
     # Jobs processed at the same time by one worker.
     worker_concurrency: int = 3

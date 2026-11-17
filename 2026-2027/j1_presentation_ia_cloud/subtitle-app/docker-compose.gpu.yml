@@ -1,8 +1,46 @@
-# Added on top of docker-compose.yml when DEVICE=gpu: gives the worker access to
-# one NVIDIA GPU. Requires the NVIDIA driver and the NVIDIA Container Toolkit
-# on the host (with Docker Desktop on Windows: WSL 2 backend + NVIDIA driver).
+# Added on top of docker-compose.yml when DEVICE=gpu: the models move to an NVIDIA
+# Triton inference server, the only service that gets the GPU. The worker keeps the
+# queue, ffmpeg and the files, and sends audio and text to Triton over gRPC.
+# Requires the NVIDIA driver and the NVIDIA Container Toolkit on the host (with Docker
+# Desktop on Windows: WSL 2 backend + NVIDIA driver).
 services:
-  worker:
+  triton:
+    image: subtitle-triton:25.06
+    build:
+      context: .
+      dockerfile: triton/Dockerfile
+    restart: unless-stopped
+    # Explicit model control: the translator and the default Whisper start with the
+    # server; the worker asks for the other Whisper sizes when a user picks them.
+    command:
+      - tritonserver
+      - --model-repository=/models
+      - --model-control-mode=explicit
+      - --load-model=translator
+      - --load-model=${TRITON_PRELOAD_MODEL:-whisper_medium_en}
+      - --log-info=true
+    # The Python backend passes tensors through shared memory: a 2-hour audio file is
+    # ~230 MB (Docker's default /dev/shm is 64 MB).
+    shm_size: 2gb
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    volumes:
+      # Whisper weights, downloaded from Hugging Face on first load.
+      - models:/hf
+    # Local access only, for checks and the TP clients (8000 HTTP, 8001 gRPC, 8002 metrics):
+    #   curl localhost:8100/v2/health/ready
+    ports:
+      - "127.0.0.1:${TRITON_HTTP_PORT:-8100}:8000"
+      - "127.0.0.1:${TRITON_GRPC_PORT:-8101}:8001"
+      - "127.0.0.1:${TRITON_METRICS_PORT:-8102}:8002"
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8000/v2/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      # Loading the models takes up to a couple of minutes on the first start.
+      start_period: 180s
     deploy:
       resources:
         reservations:
@@ -10,3 +48,11 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+
+  worker:
+    environment:
+      INFERENCE_BACKEND: triton
+      TRITON_URL: triton:8001
+    depends_on:
+      triton:
+        condition: service_healthy

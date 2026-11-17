@@ -44,13 +44,18 @@ def _register(name: str, source: str, target: str, target_token: str | None = No
     def model_dir() -> Path:
         return get_settings().translation_models_dir / name
 
-    register_translator(
-        name,
-        lambda: OpusMT(model_dir(), target_token),
-        source=source,
-        target=target,
-        is_available=lambda: (model_dir() / "model.bin").is_file(),
-    )
+    def factory() -> Translator:
+        if get_settings().inference_backend == "triton":
+            from app.translation.triton import TritonTranslator
+
+            return TritonTranslator(target)
+        return OpusMT(model_dir(), target_token)
+
+    def is_available() -> bool:
+        # With Triton the models are in the inference server image, not here.
+        return get_settings().inference_backend == "triton" or (model_dir() / "model.bin").is_file()
+
+    register_translator(name, factory, source=source, target=target, is_available=is_available)
 
 
 # The six official UN languages, from English. The Hugging Face model behind
