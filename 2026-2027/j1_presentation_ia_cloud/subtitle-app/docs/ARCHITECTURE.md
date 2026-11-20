@@ -283,10 +283,11 @@ la devinette de mots de passe sans remplacer un pare-feu ou un reverse proxy.
 Exigence : résultat en moins de temps que la durée du média, jusqu'à 10 utilisateurs en
 parallèle.
 
-**Raisonnement.** Le worker sérialise l'inférence sur le GPU. Si un traitement coûte
-`r × durée` (r = rapport calcul / durée du média), le dernier de 10 traitements identiques
-soumis en même temps attend `10 × r × durée`. L'exigence est donc tenue tant que **r < 0,1**
-pour le traitement complet.
+**Raisonnement.** Pire cas : les traitements passent l'un après l'autre. Si un traitement
+coûte `r × durée` (r = rapport calcul / durée du média), le dernier de 10 traitements
+identiques soumis en même temps attend `10 × r × durée`. L'exigence est donc tenue à coup
+sûr tant que **r < 0,1** pour le traitement complet ; le parallélisme (3 traitements par
+worker, plusieurs requêtes à la fois sur Triton) donne de la marge au-delà.
 
 ### Mesures sur CPU seul
 
@@ -330,8 +331,8 @@ de calcul sont mieux servies par Linux. L'exigence des 10 utilisateurs est donc 
 seul, avec de la marge, dans la configuration de déploiement.
 
 Vérifié sur cette pile : construction de l'image, démarrage des quatre services, traitement
-réel des quatre types de sortie avec traduction et correction, les 87 tests automatisés rejoués
-dans l'image sur PostgreSQL, relance automatique de l'application après l'arrêt de son
+réel des quatre types de sortie avec traduction et correction, les tests automatisés rejoués
+dans l'image sur PostgreSQL (194 au 20/11/2026, tous passés, image `gpu`), relance automatique de l'application après l'arrêt de son
 processus, console d'administration utilisable base de données arrêtée.
 
 ### Modèles multilingues
@@ -397,18 +398,32 @@ processeur de 20 cœurs :
 `medium` / 26 sur GPU (fichier presque deux fois plus léger, encodage toujours environ 19 fois
 plus rapide que la durée de la vidéo).
 
-### Cible serveur avec GPU
+### Avec GPU (Triton)
 
-Sur un GPU de classe T4 / L4 en float16, faster-whisper est donné pour plusieurs fois plus
-rapide que ce CPU, ce qui laisserait de la marge pour `medium.en` à 10 utilisateurs.
+Poste portable : Intel Core Ultra 7 255HX, NVIDIA RTX 5070 Ti Laptop (12 Go), pile Docker
+complète en version GPU (Docker Desktop, moteur WSL 2) : inférence sur Triton, worker sans
+GPU, modèle par défaut `whisper-medium.en`, échantillon `input.mp4` (148,9 s),
+`scripts/benchmark.py`. Mesure du 20/11/2026.
 
-> **Cette configuration GPU n'a pas été exécutée** : pas de GPU NVIDIA sur le poste où ces
-> mesures ont été faites. L'image `gpu` y a été construite (5,4 Go, contre 1,7 Go pour `cpu`)
-> et contient bien les bibliothèques CUDA, mais aucune inférence n'a tourné sur GPU. À valider sur la machine cible avec
-> `python scripts/benchmark.py input.mp4 --users 10 --output-type video_embedded`. La page
-> d'administration affiche ensuite le rapport calcul / durée en continu sur l'usage réel.
+| Scénario | Résultat le plus rapide | Résultat le plus lent | × durée (le plus lent) | Exigence |
+|---|---|---|---|---|
+| 10 utilisateurs simultanés, vidéo incrustée | 19,6 s | 65,1 s | 0,44 | tenue |
 
-Leviers si la mesure dépasse : `whisper-small.en` par défaut, augmenter `BATCH_SIZE`,
+Lecture : chaque traitement complet (transcription, incrustation `medium` / CRF 26) coûte
+de 14 à 25 s de calcul. Triton traite plusieurs requêtes Whisper à la fois sur une seule copie
+des poids (`max_concurrent_requests` = 4) et le worker mène 3 traitements en parallèle : les
+résultats arrivent environ toutes les 5 s, et le dernier des 10 en moins de la moitié de la
+durée du média. L'exigence est tenue avec `medium.en`, plus précis que le `small.en` imposé
+sur CPU, et avec une marge d'environ 2,3 fois.
+
+Le premier traitement après un démarrage de Triton est plus lent (initialisation CUDA) :
+lancer un traitement de préchauffage avant une démonstration chronométrée. La page
+d'administration affiche ensuite le rapport calcul / durée en continu sur l'usage réel.
+
+Pour rejouer la mesure :
+`python scripts/benchmark.py input.mp4 --users 10 --output-type video_embedded`.
+
+Leviers si la charge augmente : `whisper-small.en` par défaut, augmenter `BATCH_SIZE`,
 ajouter des vCPU pour l'incrustation, ou lancer un second worker sur une autre machine ou un
 second GPU (`docker compose up -d --scale worker=2`).
 
