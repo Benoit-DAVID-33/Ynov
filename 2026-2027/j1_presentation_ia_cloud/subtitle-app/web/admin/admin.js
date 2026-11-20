@@ -345,7 +345,7 @@ function renderJobs(jobs) {
     if (!content) { cell("–"); continue; }
     const details = el("details", { open: openRows.has(job.id) },
       el("summary", { textContent: job.text ? "Voir le texte" : "Voir l'erreur" }),
-      el("p", { textContent: content }));
+      el("p", { className: "job-text", textContent: content }));
     details.ontoggle = () => (details.open ? openRows.add(job.id) : openRows.delete(job.id));
     cell(details);
   }
