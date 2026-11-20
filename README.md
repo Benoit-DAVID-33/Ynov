@@ -30,7 +30,7 @@ Avec Docker s'ajoutent les services d'exploitation :
 | Service | Adresse par défaut | Rôle |
 |---|---|---|
 | Keycloak | <http://localhost:8080> | Connexion unique (SSO) |
-| Grafana | <http://localhost:3000> | Tableau de bord d'exploitation (compte `admin`) |
+| Grafana | <http://localhost:3001> | Tableau de bord d'exploitation (compte `admin`) |
 | Prometheus | <http://localhost:9090> (cette machine seulement) | Collecte des métriques |
 | Triton (GPU) | `localhost:8100` HTTP, `8101` gRPC, `8102` métriques (cette machine seulement) | Serveur d'inférence |
 
@@ -370,7 +370,7 @@ mémoire GPU). Prometheus les collecte toutes les 15 s et les garde 15 jours
 (`PROMETHEUS_RETENTION`) ; les workers sont découverts par DNS, y compris avec
 `docker compose up --scale worker=N`.
 
-Grafana (<http://localhost:3000>, compte `admin` / `GRAFANA_ADMIN_PASSWORD`) ouvre directement
+Grafana (<http://localhost:3001>, compte `admin` / `GRAFANA_ADMIN_PASSWORD`) ouvre directement
 le tableau de bord « Sous-titrage : application et inférence », intégré à l'image
 `subtitle-grafana` depuis `observability/grafana` (modifier le JSON, puis
 `docker compose up -d --build grafana`) : vue d'ensemble (file, workers, taux de réussite, état de Triton et
